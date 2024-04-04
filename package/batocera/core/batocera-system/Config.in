@@ -1,0 +1,161 @@
+
+config BR2_PACKAGE_BATOCERA_SYSTEM
+    bool "batocera.linux minimal"
+
+    # RISC-V support needs a hack here to declare as RV64GC, needed for Rust
+    select BR2_RISCV_ISA_RVC				if BR2_PACKAGE_BATOCERA_TARGET_RISCV
+
+    # minimal system required packages
+    select BR2_TARGET_BATOCERA_IMAGES_DEFINITIONS
+    select BR2_PACKAGE_BASH                                 # bash shell, used as the interactive shell
+    select BR2_PACKAGE_RNG_TOOLS                            if !BR2_PACKAGE_BATOCERA_TARGET_RK3128 # system entropy. Currently disabled for RK3128 due to high CPU impact
+    select BR2_PACKAGE_BATOCERA_TRIGGERHAPPY                # multimedia/power buttons
+    select BR2_PACKAGE_BATOCERA_UDEV_RULES                  # extra udev rules for specifics joysticks/devices
+    select BR2_PACKAGE_BATOCERA_USERDATAINIT                # userdata init files
+    select BR2_PACKAGE_CIFS_UTILS                           # required for boot mounts
+    select BR2_PACKAGE_BATOCERA_IMAGE                       # tools to generate batocera image
+    select BR2_TARGET_ROOTFS_SQUASHFS                       # tool to generate the target image
+    select BR2_PACKAGE_SQUASHFS_XZ                          # some squashfs options
+    select BR2_PACKAGE_SQUASHFS_ZSTD                        # some squashfs options
+    select BR2_PACKAGE_DOSFSTOOLS                           # fat
+    select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT                  # fat
+    select BR2_PACKAGE_DOSFSTOOLS_MKFS_FAT                  # fat
+    select BR2_PACKAGE_EXFAT                                # exfat
+    select BR2_PACKAGE_EXFAT_UTILS                          # exfat
+    select BR2_PACKAGE_E2FSPROGS                            # ext4
+    select BR2_PACKAGE_NTFS_3G                              # ntfs
+    select BR2_PACKAGE_NTFS_3G_NTFSPROGS                    # ntfs
+    select BR2_PACKAGE_BTRFS_PROGS                          # btrfs
+    select BR2_PACKAGE_UTIL_LINUX_LIBMOUNT                  # for util-linux compilation to work (so, may be removed in the future)
+    select BR2_PACKAGE_FBV                                  # very simple graphic file viewer for the framebuffer console, capable of displaying GIF, JPEG, PNG and BMP files using libungif, libjpeg and libpng
+    select BR2_PACKAGE_EUDEV_RULES_GEN                      # fork of systemd-udev with the goal of obtaining better compatibility with existing software such as OpenRC and Upstart
+    select BR2_PACKAGE_BOOST_ATOMIC                         # library that provides atomic data types and operations on these data types
+    select BR2_PACKAGE_UTIL_LINUX_LIBSMARTCOLS              # library is used for smart adaptive formatting of tabular data
+    select BR2_PACKAGE_UTIL_LINUX_SETTERM                   # Set terminal attributes
+    select BR2_PACKAGE_USB_MODESWITCH                       # USB modeswitch support
+    select BR2_PACKAGE_TREE                                 # recursive directory listing (useful for generating documentation on rom directory structure)
+
+    # Python and SSL
+    select BR2_PACKAGE_HOST_PYTHON3
+    select BR2_PACKAGE_HOST_PYTHON3_SSL
+    select BR2_PACKAGE_PYTHON3
+    select BR2_PACKAGE_PYTHON3_SSL
+    select BR2_PACKAGE_PYTHON3_PYOPENSSL
+
+    select BR2_PACKAGE_PARTED                               # partition management (for the first boot)
+    select BR2_PACKAGE_USBMOUNT                             # usb key/sd card mounter
+    select BR2_PACKAGE_USBUTILS                             # usb key/sd card tools
+    select BR2_PACKAGE_BATOCERA_SCRIPTS                     # batocera scripts
+    select BR2_PACKAGE_BATOCERA_RESOLUTION                  # batocera resolution
+    select BR2_PACKAGE_BATOCERA_SETTINGS                    # batocera-settings-get/set
+
+    select BR2_PACKAGE_EDID_DECODE                          # edid monitor/tv support
+    select BR2_PACKAGE_READ_EDID                            # edid monitor/tv support
+    select BR2_SYSTEM_ENABLE_NLS                            # locales
+    select BR2_PACKAGE_ACPID                                if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
+    select BR2_PACKAGE_KBD                                  # loadkeys
+    select BR2_PACKAGE_XKEYBOARD_CONFIG                     if BR2_PACKAGE_LIBXKBCOMMON
+    select BR2_PACKAGE_GPTFDISK                             # fs resize
+    select BR2_PACKAGE_GPTFDISK_SGDISK                      # fs resize
+    select BR2_PACKAGE_E2FSPROGS                            # fs resize
+    select BR2_PACKAGE_E2FSPROGS_RESIZE2FS                  # fs resize
+    select BR2_PACKAGE_BTOP                                 # htop alternative
+    select BR2_PACKAGE_MOKUTIL                              if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY # mokutil machine owner key utility
+
+    # irq balancing
+    select BR2_PACKAGE_IRQBALANCE
+
+    # compression tools
+    select BR2_PACKAGE_UNZIP        # for /userdata/system/upgrade/share.zip
+    select BR2_PACKAGE_XZ           # for updates
+    select BR2_PACKAGE_ZSTD         # for btrfs compression
+    select BR2_PACKAGE_LZ4          # for initramfs compression
+
+    # script tool
+    select BR2_PACKAGE_DIALOG
+
+    # tools
+    select BR2_PACKAGE_I2C_TOOLS
+    select BR2_PACKAGE_MDADM # RAID
+    select BR2_PACKAGE_MC
+    select BR2_PACKAGE_PYTHON_SERIAL    if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
+    select BR2_PACKAGE_BATOCERA_ETHTOOL
+    select BR2_PACKAGE_SMARTMONTOOLS
+
+    # FUN R1 Gamepad
+    select BR2_PACKAGE_FUN_R1_GAMEPAD   if BR2_PACKAGE_BATOCERA_TARGET_S905
+
+    # required gcc flags
+    # required for different emulators, i suggest to enable it always to not have different behavior depending on boards
+    select BR2_GCC_ENABLE_OPENMP
+
+    # leds
+    select BR2_PACKAGE_AYN_PLATFORM     if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
+
+    help
+        Install the batocera.linux system files
+
+config BR2_TARGET_BATOCERA_IMAGES_DEFINITIONS
+    bool "target images definitions"
+    config BR2_TARGET_BATOCERA_IMAGES
+    string "target images"
+    default "armhf" if BR2_PACKAGE_BATOCERA_TARGET_ARMHF
+    default "armv7" if BR2_PACKAGE_BATOCERA_TARGET_ARMV7
+    default "aarch64" if BR2_PACKAGE_BATOCERA_TARGET_AARCH64
+    default "riscv" if BR2_PACKAGE_BATOCERA_TARGET_RISCV
+    default "x86" if BR2_PACKAGE_BATOCERA_TARGET_X86_64
+    default "saphira" if BR2_PACKAGE_BATOCERA_TARGET_SAPHIRA
+
+choice
+    prompt "batocera.linux target"
+    default BR2_PACKAGE_BATOCERA_TARGET_X86_64
+    help
+        Select batocera.linux target hardware
+
+# Targets
+# ---------------------------------------
+config BR2_PACKAGE_BATOCERA_TARGET_ARMHF
+    bool "armhf"
+
+config BR2_PACKAGE_BATOCERA_TARGET_ARMV7
+    bool "armv7"
+
+config BR2_PACKAGE_BATOCERA_TARGET_AARCH64
+    bool "aarch64"
+
+config BR2_PACKAGE_BATOCERA_TARGET_RISCV
+    bool "riscv"
+
+config BR2_PACKAGE_BATOCERA_TARGET_X86_64
+    bool "x86_64"
+
+endchoice
+
+config BR2_PACKAGE_BATOCERA_EXTRAS
+    bool "batocera.linux tools packages selection"
+
+    help
+        Tools to extends the batocera system (but not required)
+
+config BR2_PACKAGE_BATOCERA_TOOLS
+    bool "batocera.linux system tools packages selection"
+
+    select BR2_PACKAGE_JSTEST2          # joysticks tester
+    select BR2_PACKAGE_EVTEST           # joysticks tester
+    select BR2_PACKAGE_LINUXCONSOLETOOLS               # tools for linux events calibration
+    select BR2_PACKAGE_LINUXCONSOLETOOLS_JOYSTICK      # tools for linux events calibration
+    select BR2_PACKAGE_LINUXCONSOLETOOLS_FORCEFEEDBACK # tools for linux events calibration
+    select BR2_PACKAGE_VIM              # basic vi emulator
+    select BR2_PACKAGE_NANO             # basic nano emulator
+    select BR2_PACKAGE_ZIP              # zip tool
+    select BR2_PACKAGE_P7ZIP            # zip tool
+    select BR2_PACKAGE_SQUASHFS         # mksquash tool
+    select BR2_PACKAGE_HTOP             # multi-cpus usage
+    select BR2_PACKAGE_NCDU             # Disk Usage
+    select BR2_PACKAGE_SWITCHRES        if !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 && !BR2_PACKAGE_BATOCERA_WAYLAND # switchres 15kHz
+    select BR2_PACKAGE_LIBGPIOD_TOOLS   if BR2_PACKAGE_LIBGPIOD
+
+    help
+        System tools
+
+### ### ###
