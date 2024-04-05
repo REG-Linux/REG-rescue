@@ -210,7 +210,7 @@ if [ "$command" = "canupdate" ];then
 	installed=`cat /usr/share/batocera/batocera.version`
 
 	echo "${available}"
-	
+
 	if [ "$available" != "$installed" ]; then
 		exit 0
 	fi
@@ -265,16 +265,6 @@ if [ "$command" = "storage" ]; then
 		postBootConfig
 		exit 0
     fi
-fi
-
-if [ "$command" = "forgetBT" ]; then
-   killall -9 hcitool
-   /etc/init.d/S32bluetooth stop
-   rm -rf /var/lib/bluetooth
-   mkdir /var/lib/bluetooth
-   rm -f /userdata/system/bluetooth/bluetooth.tar
-   /etc/init.d/S32bluetooth start
-   exit 0
 fi
 
 if [ "$command" = "tz" ]; then

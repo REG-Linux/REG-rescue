@@ -42,10 +42,6 @@ ba_hostname() {
     cp /tmp/hostname.log /userdata/system/logs/hostname.log
 }
 
-ba_es_core_dump() {
-    sysctl -wq kernel.core_pattern=/userdata/system/logs/core.%e
-}
-
 case "$1" in
   start)
     printf "Starting system: "
@@ -56,7 +52,6 @@ case "$1" in
     ba_keyboard_lang &
     ba_timezone &
     ba_hostname &
-    ba_es_core_dump &
     echo "done."
     ;;
   stop)
