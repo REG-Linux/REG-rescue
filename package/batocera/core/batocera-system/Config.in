@@ -85,13 +85,6 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     # FUN R1 Gamepad
     select BR2_PACKAGE_FUN_R1_GAMEPAD   if BR2_PACKAGE_BATOCERA_TARGET_S905
 
-    # required gcc flags
-    # required for different emulators, i suggest to enable it always to not have different behavior depending on boards
-    select BR2_GCC_ENABLE_OPENMP
-
-    # leds
-    select BR2_PACKAGE_AYN_PLATFORM     if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
-
     help
         Install the batocera.linux system files
 
