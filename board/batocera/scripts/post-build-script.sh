@@ -78,11 +78,6 @@ touch "${TARGET_DIR}/run/batocera.shadow"
 (cd "${TARGET_DIR}/etc" && ln -sf "../run/batocera.shadow" "shadow") || exit 1
 # ln -sf "/run/batocera.shadow" "${TARGET_DIR}/etc/shadow" || exit 1
 
-# timezone
-# file generated from the output directory and compared to https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-# because i don't know how to list correctly them
-(cd "${TARGET_DIR}/usr/share/zoneinfo" && find -L . -type f | grep -vE '/right/|/posix/|\.tab|Factory' | sed -e s+'^\./'++ | sort) > "${TARGET_DIR}/usr/share/batocera/tz"
-
 # enable serial console
 SYSTEM_GETTY_PORT=$(grep "BR2_TARGET_GENERIC_GETTY_PORT" "${BR2_CONFIG}" | sed 's/.*\"\(.*\)\"/\1/')
 if ! [[ -z "${SYSTEM_GETTY_PORT}" ]]; then
@@ -90,3 +85,7 @@ if ! [[ -z "${SYSTEM_GETTY_PORT}" ]]; then
     sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -n -L -l /usr/bin/batocera-autologin '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
         ${TARGET_DIR}/etc/inittab
 fi
+
+# delete batocera-boot.conf
+rm -f "${BINARIES_DIR}/batocera-boot.conf"
+

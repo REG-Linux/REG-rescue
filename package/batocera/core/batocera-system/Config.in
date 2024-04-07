@@ -1,3 +1,14 @@
+# Targets
+config BR2_PACKAGE_BATOCERA_TARGET_AARCH64
+    bool "aarch64"
+config BR2_PACKAGE_BATOCERA_TARGET_ARMHF
+    bool "armhf"
+config BR2_PACKAGE_BATOCERA_TARGET_ARMV7
+    bool "armv7"
+config BR2_PACKAGE_BATOCERA_TARGET_RISCV
+    bool "riscv"
+config BR2_PACKAGE_BATOCERA_TARGET_X86_64
+    bool "x86_64"
 
 config BR2_PACKAGE_BATOCERA_SYSTEM
     bool "batocera.linux minimal"
@@ -26,7 +37,6 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_NTFS_3G_NTFSPROGS                    # ntfs
     select BR2_PACKAGE_BTRFS_PROGS                          # btrfs
     select BR2_PACKAGE_UTIL_LINUX_LIBMOUNT                  # for util-linux compilation to work (so, may be removed in the future)
-    select BR2_PACKAGE_FBV                                  # very simple graphic file viewer for the framebuffer console, capable of displaying GIF, JPEG, PNG and BMP files using libungif, libjpeg and libpng
     select BR2_PACKAGE_EUDEV_RULES_GEN                      # fork of systemd-udev with the goal of obtaining better compatibility with existing software such as OpenRC and Upstart
     select BR2_PACKAGE_BOOST_ATOMIC                         # library that provides atomic data types and operations on these data types
     select BR2_PACKAGE_UTIL_LINUX_LIBSMARTCOLS              # library is used for smart adaptive formatting of tabular data
@@ -36,10 +46,7 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
 
     # Python and SSL
     select BR2_PACKAGE_HOST_PYTHON3
-    select BR2_PACKAGE_HOST_PYTHON3_SSL
     select BR2_PACKAGE_PYTHON3
-    select BR2_PACKAGE_PYTHON3_SSL
-    select BR2_PACKAGE_PYTHON3_PYOPENSSL
 
     select BR2_PACKAGE_PARTED                               # partition management (for the first boot)
     select BR2_PACKAGE_USBMOUNT                             # usb key/sd card mounter
@@ -101,7 +108,7 @@ config BR2_PACKAGE_BATOCERA_TOOLS
     select BR2_PACKAGE_SQUASHFS         # mksquash tool
     select BR2_PACKAGE_HTOP             # multi-cpus usage
     select BR2_PACKAGE_NCDU             # Disk Usage
-    select BR2_PACKAGE_SWITCHRES        if !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 && !BR2_PACKAGE_BATOCERA_WAYLAND # switchres 15kHz
+    select BR2_PACKAGE_SWITCHRES        if !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 # switchres 15kHz
     select BR2_PACKAGE_LIBGPIOD_TOOLS   if BR2_PACKAGE_LIBGPIOD
 
     help

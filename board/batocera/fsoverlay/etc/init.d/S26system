@@ -16,13 +16,6 @@ ba_keyboard_lang() {
     fi
 }
 
-ba_timezone() {
-    settings_timezone="$(/usr/bin/batocera-settings-get system.timezone)"
-    if [ "$settings_timezone" != "" ]; then
-        eval $config_script "tz" "$settings_timezone" >> $log
-    fi
-}
-
 ba_hostname() {
     settings_hostname="$(/usr/bin/batocera-settings-get system.hostname)"
     hostname="$(hostname)"
@@ -50,7 +43,6 @@ case "$1" in
 
     # configure
     ba_keyboard_lang &
-    ba_timezone &
     ba_hostname &
     echo "done."
     ;;
