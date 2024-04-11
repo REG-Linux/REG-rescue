@@ -1,3 +1,4 @@
+include bootlin-armhf.common
 include batocera-board.common
 
 # Target definiton
@@ -5,16 +6,18 @@ BR2_arm=y
 BR2_arm1176jzf_s=y
 BR2_ARM_EABIHF=y
 BR2_PACKAGE_BATOCERA_TARGET_ARMHF=y
-BR2_TARGET_OPTIMIZATION="-pipe -fsigned-char -mcpu=arm1176jzf-s -mtune=arm1176jzf-s"
 BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200=y
 BR2_GLOBAL_PATCH_DIR="$(BR2_EXTERNAL_BATOCERA_PATH)/board/batocera/patches $(BR2_EXTERNAL_BATOCERA_PATH)/board/batocera/armhf/patches"
 BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_BATOCERA_PATH)/board/batocera/fsoverlay $(BR2_EXTERNAL_BATOCERA_PATH)/board/batocera/armhf/fsoverlay"
 BR2_TARGET_ROOTFS_SQUASHFS4_ZSTD=y
 
-# Linux headers 
-BR2_KERNEL_HEADERS_AS_KERNEL=y
+# Linux headers
+BR2_KERNEL=n
 BR2_KERNEL_HEADERS_6_6=y
-BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_6=y
 
-# Kernel - Version: 6.6.20
-BR2_LINUX_KERNEL=n
+# Filesystem
+BR2_PACKAGE_HOST_DOSFSTOOLS=y
+BR2_PACKAGE_HOST_MTOOLS=y
+
+# spi flash support
+BR2_PACKAGE_MTD=y
