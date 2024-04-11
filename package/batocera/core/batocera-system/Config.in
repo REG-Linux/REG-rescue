@@ -21,7 +21,6 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_BASH                                 # bash shell, used as the interactive shell
     select BR2_PACKAGE_RNG_TOOLS                            # system entropy. Currently disabled for RK3128 due to high CPU impact
     select BR2_PACKAGE_BATOCERA_UDEV_RULES                  # extra udev rules for specifics joysticks/devices
-    select BR2_PACKAGE_BATOCERA_USERDATAINIT                # userdata init files
     select BR2_PACKAGE_CIFS_UTILS                           # required for boot mounts
     select BR2_PACKAGE_HOST_GENEXT2FS                       # tools to generate rescue image
     select BR2_TARGET_ROOTFS_SQUASHFS                       # tool to generate the target image
@@ -87,12 +86,6 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_BATOCERA_ETHTOOL
     select BR2_PACKAGE_SMARTMONTOOLS
 
-    help
-        Install the batocera.linux system files
-
-config BR2_PACKAGE_BATOCERA_TOOLS
-    bool "batocera.linux system tools packages selection"
-
     select BR2_PACKAGE_JSTEST2          # joysticks tester
     select BR2_PACKAGE_EVTEST           # joysticks tester
     select BR2_PACKAGE_LINUXCONSOLETOOLS               # tools for linux events calibration
@@ -109,6 +102,6 @@ config BR2_PACKAGE_BATOCERA_TOOLS
     select BR2_PACKAGE_LIBGPIOD_TOOLS   if BR2_PACKAGE_LIBGPIOD
 
     help
-        System tools
+        Rescue System
 
 ### ### ###
