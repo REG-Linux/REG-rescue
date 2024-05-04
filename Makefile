@@ -2,7 +2,7 @@ PROJECT_DIR    := $(shell pwd)
 DL_DIR         ?= $(PROJECT_DIR)/dl
 OUTPUT_DIR     ?= $(PROJECT_DIR)/output
 CCACHE_DIR     ?= $(PROJECT_DIR)/buildroot-ccache
-LOCAL_MK       ?= $(PROJECT_DIR)/batocera.mk
+LOCAL_MK       ?= $(PROJECT_DIR)/rescue.mk
 EXTRA_PKGS     ?=
 DOCKER_OPTS    ?=
 MAKE_JLEVEL    ?= $(shell nproc)
@@ -24,7 +24,7 @@ endif
 DOCKER_REPO := batoceralinux
 IMAGE_NAME  := batocera.linux-build
 
-TARGETS := $(sort $(shell find $(PROJECT_DIR)/configs/ -name 'b*' | sed -n 's/.*\/batocera-\(.*\).board/\1/p'))
+TARGETS := $(sort $(shell find $(PROJECT_DIR)/configs/ -name 'r*' | sed -n 's/.*\/rescue-\(.*\).board/\1/p'))
 UID  := $(shell id -u)
 GID  := $(shell id -g)
 
@@ -85,9 +85,9 @@ dl-dir:
 		make O=/$* BR2_EXTERNAL=/build -C /build/buildroot clean
 
 %-config: batocera-docker-image output-dir-%
-	@$(PROJECT_DIR)/configs/createDefconfig.sh $(PROJECT_DIR)/configs/batocera-$*
+	@$(PROJECT_DIR)/configs/createDefconfig.sh $(PROJECT_DIR)/configs/rescue-$*
 	@for opt in $(EXTRA_OPTS); do \
-		echo $$opt >> $(PROJECT_DIR)/configs/batocera-$*_defconfig ; \
+		echo $$opt >> $(PROJECT_DIR)/configs/rescue-$*_defconfig ; \
 	done
 	@$(DOCKER) run -t --init --rm \
 		-v $(PROJECT_DIR):/build \
@@ -98,7 +98,7 @@ dl-dir:
 		-u $(UID):$(GID) \
 		$(DOCKER_OPTS) \
 		$(DOCKER_REPO)/$(IMAGE_NAME) \
-		make O=/$* BR2_EXTERNAL=/build -C /build/buildroot batocera-$*_defconfig
+		make O=/$* BR2_EXTERNAL=/build -C /build/buildroot rescue-$*_defconfig
 
 %-build: batocera-docker-image %-config ccache-dir dl-dir
 	@$(DOCKER) run -t --init --rm \
@@ -200,60 +200,8 @@ dl-dir:
 	$(if $(PKG),,$(error "PKG not specified!"))
 	@$(MAKE) $*-build CMD=$(PKG)
 
-%-webserver: output-dir-%
-	$(if $(wildcard $(OUTPUT_DIR)/$*/images/batocera/*),,$(error "$* not built!"))
-	$(if $(shell which python 2>/dev/null),,$(error "python not found!"))
-ifeq ($(strip $(BOARD)),)
-	$(if $(wildcard $(OUTPUT_DIR)/$*/images/batocera/images/$*/.*),,$(error "Directory not found: $(OUTPUT_DIR)/$*/images/batocera/images/$*"))
-	python3 -m http.server --directory $(OUTPUT_DIR)/$*/images/batocera/images/$*/
-else
-	$(if $(wildcard $(OUTPUT_DIR)/$*/images/batocera/images/$(BOARD)/.*),,$(error "Directory not found: $(OUTPUT_DIR)/$*/images/batocera/images/$(BOARD)"))
-	python3 -m http.server --directory $(OUTPUT_DIR)/$*/images/batocera/images/$(BOARD)/
-endif
-
-%-rsync: output-dir-%
-	$(eval TMP := $(call UC, $*)_IP)
-	$(if $(shell which rsync 2>/dev/null),, $(error "rsync not found!"))
-	$(if $($(TMP)),,$(error "$(TMP) not set!"))
-	rsync -e "ssh -o 'UserKnownHostsFile /dev/null' -o StrictHostKeyChecking=no" -av $(OUTPUT_DIR)/$*/target/ root@$($(TMP)):/
-
 %-tail: output-dir-%
 	@tail -F $(OUTPUT_DIR)/$*/build/build-time.log
-
-%-snapshot: %-supported
-	$(if $(shell which btrfs 2>/dev/null),, $(error "btrfs not found!"))
-	@mkdir -p $(OUTPUT_DIR)/snapshots
-	-@sudo btrfs sub del $(OUTPUT_DIR)/snapshots/$*-toolchain
-	@btrfs subvolume snapshot -r $(OUTPUT_DIR)/$* $(OUTPUT_DIR)/snapshots/$*-toolchain
-
-%-rollback: %-supported
-	$(if $(shell which btrfs 2>/dev/null),, $(error "btrfs not found!"))
-	-@sudo btrfs sub del $(OUTPUT_DIR)/$*
-	@btrfs subvolume snapshot $(OUTPUT_DIR)/snapshots/$*-toolchain $(OUTPUT_DIR)/$*
-
-%-flash: %-supported
-	$(if $(DEV),,$(error "DEV not specified!"))
-	@gzip -dc $(OUTPUT_DIR)/$*/images/batocera/images/$*/batocera-*.img.gz | sudo dd of=$(DEV) bs=5M status=progress
-	@sync
-
-%-upgrade: %-supported
-	$(if $(DEV),,$(error "DEV not specified!"))
-	-@sudo umount /tmp/mount
-	-@mkdir /tmp/mount
-	@sudo mount $(DEV)1 /tmp/mount
-	-@sudo rm /tmp/mount/boot/batocera
-	@sudo tar xvf $(OUTPUT_DIR)/$*/images/batocera/boot.tar.xz -C /tmp/mount --no-same-owner
-	@sudo umount /tmp/mount
-	-@rmdir /tmp/mount
-
-%-toolchain: %-supported
-	$(if $(shell which btrfs 2>/dev/null),, $(error "btrfs not found!"))
-	-@sudo btrfs sub del $(OUTPUT_DIR)/$*
-	@btrfs subvolume create $(OUTPUT_DIR)/$*
-	@$(MAKE) $*-config
-	@$(MAKE) $*-build CMD=toolchain
-	@$(MAKE) $*-build CMD=llvm
-	@$(MAKE) $*-snapshot
 
 %-find-build-dups: %-supported
 	@find $(OUTPUT_DIR)/$*/build -maxdepth 1 -type d -printf '%T@ %p %f\n' | sed -r 's:\-[0-9a-f\.]+$$::' | sort -k3 -k1 | uniq -f 2 -d | cut -d' ' -f2
@@ -270,10 +218,3 @@ remove-dl-dups:
 	@while [ -n "`find $(DL_DIR) -maxdepth 2 -type f -name "*.zip" -o -name "*.tar.*" -printf '%T@ %p %f\n' | sed -r 's:\-[0-9a-f\.]+(\.zip|\.tar\.[2a-z]+)$$::' | sort -k3 -k1 | uniq -f 2 -d | cut -d' ' -f2 | grep .`" ] ; do \
 		find $(DL_DIR) -maxdepth 2 -type f -name "*.zip" -o -name "*.tar.*" -printf '%T@ %p %f\n' | sed -r 's:\-[0-9a-f\.]+(\.zip|\.tar\.[2a-z]+)$$::' | sort -k3 -k1 | uniq -f 2 -d | cut -d' ' -f2 | xargs rm -rf ; \
 	done
-
-uart:
-	$(if $(shell which picocom 2>/dev/null),, $(error "picocom not found!"))
-	$(if $(SERIAL_DEV),,$(error "SERIAL_DEV not specified!"))
-	$(if $(SERIAL_BAUDRATE),,$(error "SERIAL_BAUDRATE not specified!"))
-	$(if $(wildcard $(SERIAL_DEV)),,$(error "$(SERIAL_DEV) not available!"))
-	@picocom $(SERIAL_DEV) -b $(SERIAL_BAUDRATE)

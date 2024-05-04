@@ -1,1 +1,1 @@
-include $(sort $(wildcard $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/*/*.mk $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/*/*/*.mk $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/*/*/*/*.mk $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/*/*/*/*/*.mk))
+include $(sort $(wildcard $(BR2_EXTERNAL_BATOCERA_PATH)/package/rescue/*/*.mk $(BR2_EXTERNAL_BATOCERA_PATH)/package/rescue/*/*/*.mk $(BR2_EXTERNAL_BATOCERA_PATH)/package/rescue/*/*/*/*.mk $(BR2_EXTERNAL_BATOCERA_PATH)/package/rescue/*/*/*/*/*.mk))
