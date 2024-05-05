@@ -1,6 +1,6 @@
 /output
 /dl
-/configs/batocera-*_defconfig
+/configs/rescue-*_defconfig
 /.auto.deps
 /.config.cmd
 /.config.old
@@ -21,10 +21,9 @@ libretro-mame-tiny
 /buildroot-ccache
 /.ba-docker-image-available
 *.code-workspace
-batocera.mk
+rescue.mk
 .vscode/*
 make.log
-package/batocera/emulationstation/batocera-emulationstation/keys.txt
 .directory
 *.po~
 batocera-mok.key
