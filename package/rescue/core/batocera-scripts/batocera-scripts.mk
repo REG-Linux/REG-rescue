@@ -9,7 +9,7 @@ BATOCERA_SCRIPTS_LICENSE = GPL
 BATOCERA_SCRIPTS_DEPENDENCIES = pciutils
 BATOCERA_SCRIPTS_SOURCE=
 
-BATOCERA_SCRIPTS_PATH = $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-scripts
+BATOCERA_SCRIPTS_PATH = $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/batocera-scripts
 
 define BATOCERA_SCRIPTS_INSTALL_TARGET_CMDS
     install -m 0755 $(BATOCERA_SCRIPTS_PATH)/scripts/batocera-save-overlay              $(TARGET_DIR)/usr/bin/
