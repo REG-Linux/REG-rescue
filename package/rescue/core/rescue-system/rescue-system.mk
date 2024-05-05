@@ -26,7 +26,7 @@ else
 endif
 
 ifneq (,$(findstring dev,$(RESCUE_SYSTEM_VERSION)))
-    RESCUE_SYSTEM_COMMIT = "-$(shell cd $(BR2_EXTERNAL_BATOCERA_PATH) && git rev-parse --short HEAD)"
+    RESCUE_SYSTEM_COMMIT = "-$(shell cd $(BR2_EXTERNAL_RESCUE_PATH) && git rev-parse --short HEAD)"
 else
     RESCUE_SYSTEM_COMMIT =
 endif
@@ -40,18 +40,18 @@ define RESCUE_SYSTEM_INSTALL_TARGET_CMDS
 
 	# datainit
 	mkdir -p $(TARGET_DIR)/usr/share/batocera/datainit/system
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/rescue-system/batocera.conf $(TARGET_DIR)/usr/share/batocera/datainit/system
+	cp $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/batocera.conf $(TARGET_DIR)/usr/share/batocera/datainit/system
 
 	# batocera-boot.conf
-	$(INSTALL) -D -m 0644 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/rescue-system/batocera-boot.conf $(BINARIES_DIR)/batocera-boot.conf
+	$(INSTALL) -D -m 0644 $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/batocera-boot.conf $(BINARIES_DIR)/batocera-boot.conf
 
 	# mounts
 	mkdir -p $(TARGET_DIR)/boot $(TARGET_DIR)/overlay $(TARGET_DIR)/userdata
 
 	# variables
 	mkdir -p $(TARGET_DIR)/etc/profile.d
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/rescue-system/xdg.sh $(TARGET_DIR)/etc/profile.d/xdg.sh
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/rescue-system/dbus.sh $(TARGET_DIR)/etc/profile.d/dbus.sh
+	cp $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/xdg.sh $(TARGET_DIR)/etc/profile.d/xdg.sh
+	cp $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/dbus.sh $(TARGET_DIR)/etc/profile.d/dbus.sh
 
 	# list of modules that doesnt like suspend
 	mkdir -p $(TARGET_DIR)/etc/pm/config.d
