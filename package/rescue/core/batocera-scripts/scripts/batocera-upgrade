@@ -27,21 +27,6 @@ else
     exit 1
 fi
 
-# check free space on fs
-filesystems="/userdata /boot"
-
-# Check free space on filesystems
-for fs in $filesystems
-do
-    freespace=$(df -m "${fs}" | tail -1 | awk '{print $4}')
-    test $? -eq 0 || exit 1
-    if test "${size}" -gt "${freespace}"
-    then
-        echo "Not enough space on ${fs} to perform the update"
-        exit 1
-    fi
-done
-
 # check md5 checksum
 if test -e "/userdata/system/upgrade/boot.tar.zst.md5"
 then
@@ -81,17 +66,20 @@ do
     fi
 done
 
+# remount boot in r/w
+mount -o remount,rw /boot
+
 # unmount modules and firmware
-umount /lib/modules
+# busy umount /lib/modules
 umount /lib/firmware
 
 # delete files from /boot
 do_upgmsg "Removing /boot files ..."
-rm /boot/linux
-rm /boot/modules
-rm /boot/firmware
-rm /boot/initrd.lz4
-rm /boot/reglinux
+rm /boot/boot/linux
+# busy rm /boot/boot/modules
+rm /boot/boot/firmware
+rm /boot/boot/initrd.lz4
+rm /boot/boot/reglinux
 
 # extract file on /boot
 do_upgmsg "Extracting files ..."
