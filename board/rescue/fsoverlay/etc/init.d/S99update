@@ -1,0 +1,21 @@
+#!/bin/bash
+
+BOOTCONF="/boot/batocera-boot.conf"
+
+# only at start
+test "$1" != "start" && exit 0
+
+# true if triggers are not available or not set to do so
+if ! grep -qE '^[ ]*updgrade[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"
+then
+    exit 0
+fi
+
+# remove the trigger
+mount -o remount,rw /boot && sed -i -e s+'^[ ]*upgrade'+'#upgrade'+ "${BOOTCONF}" && mount -o remount,ro /boot
+
+# Launch the upgrade
+/usr/bin/batocera-upgrade
+
+# Done
+exit 0

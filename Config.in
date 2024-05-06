@@ -19,7 +19,6 @@ endmenu
 menu "Utils"
   source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/jstest2/Config.in"
   source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/xxd/Config.in"
-  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/pm-utils/Config.in"
   source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/btop/Config.in"
   source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/mokutil/Config.in"
 endmenu

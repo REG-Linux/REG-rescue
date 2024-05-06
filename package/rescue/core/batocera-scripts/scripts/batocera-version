@@ -8,17 +8,6 @@ test -e "/boot/boot/overlay" && FIND_OVERLAY=1
 FIND_CUSTOMSH=
 test -e "/userdata/system/custom.sh" && FIND_CUSTOMSH=1
 
-FIND_CUSTOMESSYSTEMS=
-test -e "/userdata/system/configs/emulationstation/es_systems.cfg" && FIND_CUSTOMESSYSTEMS=1
-
-FIND_CUSTOMESFEATURES=
-test -e "/userdata/system/configs/emulationstation/es_features.cfg" && FIND_CUSTOMESFEATURES=1
-
-FIND_CUSTOMSERVICES=$(batocera-services list user | grep '\*$' | head -1)
-
-FIND_PRO=
-test -e "/userdata/system/pro" && FIND_PRO=1
-
 EXTRA=
 test -n "${FIND_EXT}"      	   && EXTRA=${EXTRA}e
 test -n "${FIND_OVERLAY}"  	   && EXTRA=${EXTRA}o
