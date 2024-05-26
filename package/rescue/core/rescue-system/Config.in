@@ -9,6 +9,8 @@ config BR2_PACKAGE_RESCUE_TARGET_RISCV64
     bool "riscv64"
 config BR2_PACKAGE_RESCUE_TARGET_X86_64
     bool "x86_64"
+config BR2_PACKAGE_RESCUE_TARGET_MIPSEL
+    bool "mipsel"
 
 config BR2_PACKAGE_RESCUE_SYSTEM
     bool "REG Rescue"
@@ -60,7 +62,7 @@ config BR2_PACKAGE_RESCUE_SYSTEM
     select BR2_PACKAGE_GPTFDISK_SGDISK                      # fs resize
     select BR2_PACKAGE_E2FSPROGS                            # fs resize
     select BR2_PACKAGE_E2FSPROGS_RESIZE2FS                  # fs resize
-    select BR2_PACKAGE_BTOP                                 # htop alternative
+    select BR2_PACKAGE_BTOP                                 if !BR2_mipsel # htop alternative
     select BR2_PACKAGE_MOKUTIL                              if BR2_PACKAGE_RESCUE_TARGET_X86_64 # mokutil machine owner key utility
 
     # irq balancing

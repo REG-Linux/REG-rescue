@@ -1,0 +1,24 @@
+include bootlin-mipsel.common
+include rescue-board.common
+
+# Target definiton
+BR2_mipsel=y
+BR2_mips_xburst=y
+# BR2_MIPS_SOFT_FLOAT is not set
+BR2_PACKAGE_RESCUE_TARGET_MIPSEL=y
+BR2_TARGET_OPTIMIZATION="-pipe -fsigned-char"
+BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200=y
+BR2_GLOBAL_PATCH_DIR="$(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/patches $(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/mipsel/patches"
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/fsoverlay $(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/mipsel/fsoverlay"
+BR2_TARGET_ROOTFS_SQUASHFS4_XZ=y
+
+# Linux headers
+BR2_KERNEL=n
+BR2_KERNEL_HEADERS_6_1=y
+
+# Filesystem
+BR2_PACKAGE_HOST_DOSFSTOOLS=y
+BR2_PACKAGE_HOST_MTOOLS=y
+
+# spi flash support
+BR2_PACKAGE_MTD=y
