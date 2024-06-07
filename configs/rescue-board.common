@@ -2,7 +2,7 @@
 BR2_ROOTFS_USERS_TABLES="$(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/users.txt"
 
 # toolchain definition
-BR2_OPTIMIZE_2=y
+BR2_OPTIMIZE_S=y
 BR2_ENABLE_LTO=y
 
 # Allow to build GOLD linker, but do not use as default
