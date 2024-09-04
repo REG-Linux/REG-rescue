@@ -1,0 +1,21 @@
+#!/bin/sh
+
+case "$1" in
+    start)
+        if [ -f /boot/REG_UPDATE ]
+        then
+            /usr/sbin/plymouthd --mode=updates --graphical-boot --attach-to-session
+        else
+            /usr/sbin/plymouthd --mode=boot --graphical-boot --attach-to-session
+        fi
+        /usr/bin/plymouth --show-splash
+    ;;
+    stop)
+        # Save the boot log to file and stop splash
+        /usr/bin/plymouth update-root-fs --read-write
+        /usr/bin/plymouth --wait quit --retain-splash
+     ;;
+    *)
+esac
+
+exit $?

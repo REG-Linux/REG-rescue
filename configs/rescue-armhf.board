@@ -1,7 +1,7 @@
 include bootlin-armhf.common
 include rescue-board.common
 
-# Target definiton
+# Target definition
 BR2_arm=y
 BR2_arm1176jzf_s=y
 BR2_ARM_EABIHF=y
