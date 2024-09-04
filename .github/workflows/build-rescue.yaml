@@ -125,5 +125,11 @@ jobs:
         if: ${{ env.DORELEASE && ! cancelled() }}
         shell: bash
         run: |
-          gh release delete ${{ env.RESCUEVERSION }} --cleanup-tag -y || git tag ${{ env.RESCUEVERSION }}
+          gh release delete ${{ env.RESCUEVERSION }} --cleanup-tag -y || ${{ true }}
           gh release create ${{ env.RESCUEVERSION }} --latest --generate-notes --target "main" --title "REG-linux Rescue v${{ env.RESCUEVERSION }}" /__w/REG-rescue/REG-linux-rescue-COMPILED/*
+      - name: Upload artifacts in case git release fails
+        if: ${{ env.DORELEASE && ! cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: REG-linux-rescue-${{ env.RESCUEVERSION }}
+          path: /__w/REG-rescue/REG-linux-rescue-COMPILED/
