@@ -2,25 +2,6 @@ menu "REG.rescue"
 
 menu "System"
    source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/core/rescue-system/Config.in"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/core/batocera-scripts/Config.in"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/core/batocera-settings/Config.in"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/core/batocera-udev-rules/Config.in"
-
-# menu "Boot"
-#    source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/boot/batocera-shim/Config.in"
-#    source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/boot/batocera-shim-signed-efi-x64/Config.in"
-#    source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/boot/batocera-shim-signed-efi-ia32/Config.in"
-#    source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/boot/batocera-shim-signed-efi-helpers-ia32/Config.in"
-#    source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/boot/batocera-syslinux-efi/Config.in"
-# endmenu
-#
 endmenu
-
-# menu "Utils"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/jstest2/Config.in"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/xxd/Config.in"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/btop/Config.in"
-#  source "$BR2_EXTERNAL_RESCUE_PATH/package/rescue/utils/mokutil/Config.in"
-# endmenu
 
 endmenu
