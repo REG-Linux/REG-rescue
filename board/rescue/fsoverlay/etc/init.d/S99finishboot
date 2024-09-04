@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# only at start
+if [ "$1" = "start" ]; then
+    # Unless there is something goin on, let's reboot
+    [ -e /tmp/do_not_reboot ] || reboot
+else
+    exit 0
+fi
