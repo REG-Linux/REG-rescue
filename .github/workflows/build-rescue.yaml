@@ -1,4 +1,4 @@
-name: Build REG-linux RESCUE (plymouth)
+name: Build REG-linux RESCUE
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
         run: |
           cd ..
           rm -rf ./REG-rescue
-          git clone --branch plymouth "https://${GITHUB_REPOSITORY_OWNER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ./REG-rescue
+          git clone --branch main "https://${GITHUB_REPOSITORY_OWNER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ./REG-rescue
           cd REG-rescue
           git submodule init
           git submodule update
@@ -126,4 +126,4 @@ jobs:
         shell: bash
         run: |
           gh release delete ${{ env.RESCUEVERSION }} --cleanup-tag -y || git tag ${{ env.RESCUEVERSION }}
-          gh release create ${{ env.RESCUEVERSION }} --latest --generate-notes --target "plymouth" --title "REG-linux Rescue v${{ env.RESCUEVERSION }}" /__w/REG-rescue/REG-linux-rescue-COMPILED/*
+          gh release create ${{ env.RESCUEVERSION }} --latest --generate-notes --target "main" --title "REG-linux Rescue v${{ env.RESCUEVERSION }}" /__w/REG-rescue/REG-linux-rescue-COMPILED/*
