@@ -1,1 +1,1 @@
-include $(sort $(wildcard $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/*/*.mk $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/*/*/*.mk $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/*/*/*/*.mk $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/*/*/*/*/*.mk))
+include $(sort $(wildcard $(BR2_EXTERNAL_RESCUE_PATH)/package/*/*.mk $(BR2_EXTERNAL_RESCUE_PATH)/package/*/*/*.mk $(BR2_EXTERNAL_RESCUE_PATH)/package/*/*/*/*.mk $(BR2_EXTERNAL_RESCUE_PATH)/package/*/*/*/*/*.mk))
