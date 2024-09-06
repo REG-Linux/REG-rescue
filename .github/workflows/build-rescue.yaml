@@ -53,7 +53,7 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/cjom/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep aarch64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep aarch64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-aarch64
           make O=/__w/REG-rescue/REG-rescue/output/aarch64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-aarch64_defconfig
           cd output/aarch64
@@ -65,7 +65,7 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/cjom/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep armhf)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep armhf)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-armhf
           make O=/__w/REG-rescue/REG-rescue/output/armhf BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-armhf_defconfig
           cd output/armhf
@@ -77,7 +77,7 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/cjom/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep armv7)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep armv7)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-armv7
           make O=/__w/REG-rescue/REG-rescue/output/armv7 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-armv7_defconfig
           cd output/armv7
@@ -89,7 +89,7 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/cjom/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep mipsel)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep mipsel)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-mipsel
           make O=/__w/REG-rescue/REG-rescue/output/mipsel BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-mipsel_defconfig
           cd output/mipsel
@@ -101,7 +101,7 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/cjom/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep riscv64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep riscv64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-riscv64
           make O=/__w/REG-rescue/REG-rescue/output/riscv64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-riscv64_defconfig
           cd output/riscv64
@@ -113,7 +113,7 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/cjom/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep x86_64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep x86_64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-x86_64
           make O=/__w/REG-rescue/REG-rescue/output/x86_64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-x86_64_defconfig
           cd output/x86_64
