@@ -46,6 +46,7 @@ define RESCUE_SYSTEM_INSTALL_TARGET_CMDS
     # Other scripts needed
     $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/batocera-mount $(TARGET_DIR)/usr/bin/
     $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/batocera-part $(TARGET_DIR)/usr/bin/
+    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/rescue/core/rescue-system/batocera-usbmount $(TARGET_DIR)/usr/bin/
 
 endef
 
