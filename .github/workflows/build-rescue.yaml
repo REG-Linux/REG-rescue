@@ -47,78 +47,86 @@ jobs:
           cd REG-rescue
           git submodule init
           git submodule update
-          echo "RESCUEVERSION=$(grep -m 1 RESCUE_SYSTEM_VERSION /__w/REG-rescue/REG-rescue/package/rescue/core/rescue-system/rescue-system.mk | sed -e "s/.*=[ ]*//")" >> $GITHUB_ENV
+          echo "RESCUEVERSION=$(grep -m 1 RESCUE_SYSTEM_VERSION /__w/REG-rescue/REG-rescue/package/core/rescue-system/rescue-system.mk | sed -e "s/.*=[ ]*//")" >> $GITHUB_ENV
+          echo "SUFFIXDATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+          echo "DORELEASE=${{ false }}" >> $GITHUB_ENV
           mkdir -p /__w/REG-rescue/REG-linux-rescue-COMPILED
       - name: Compile aarch64
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep aarch64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 aarch64)" || ${{ true }}
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-aarch64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-aarch64
           make O=/__w/REG-rescue/REG-rescue/output/aarch64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-aarch64_defconfig
           cd output/aarch64
           make
-          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/ \;
+          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-aarch64-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-aarch64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} \; && echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/aarch64
       - name: Compile armhf
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep armhf)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armhf)" || ${{ true }}
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armhf-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-armhf
           make O=/__w/REG-rescue/REG-rescue/output/armhf BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-armhf_defconfig
           cd output/armhf
           make
-          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/ \;
+          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-armhf-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armhf-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} \; && echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/armhf
       - name: Compile armv7
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep armv7)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armv7)" || ${{ true }}
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armv7-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-armv7
           make O=/__w/REG-rescue/REG-rescue/output/armv7 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-armv7_defconfig
           cd output/armv7
           make
-          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/ \;
+          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-armv7-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armv7-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} \; && echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/armv7
       - name: Compile mipsel
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep mipsel)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 mipsel)" || ${{ true }}
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-mipsel-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-mipsel
           make O=/__w/REG-rescue/REG-rescue/output/mipsel BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-mipsel_defconfig
           cd output/mipsel
           make
-          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/ \;
+          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-mipsel-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-mipsel-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} \; && echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/mipsel
       - name: Compile riscv64
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep riscv64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 riscv64)" || ${{ true }}
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-riscv64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-riscv64
           make O=/__w/REG-rescue/REG-rescue/output/riscv64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-riscv64_defconfig
           cd output/riscv64
           make
-          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/ \;
+          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-riscv64-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-riscv64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} \; && echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/riscv64
       - name: Compile x86_64
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | grep x86_64)" && exit 0 || echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
+          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 x86_64)" || ${{ true }}
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-x86_64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-x86_64
           make O=/__w/REG-rescue/REG-rescue/output/x86_64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-x86_64_defconfig
           cd output/x86_64
           make
-          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/ \;
+          find /__w/REG-rescue/REG-rescue/output/ -type f -name 'REG-linux-rescue-x86_64-*' -exec mv '{}' /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-x86_64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} \; && echo "DORELEASE=${{ true }}" >> $GITHUB_ENV
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/x86_64
       - name: Create release
