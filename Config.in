@@ -1,13 +1,15 @@
 menu "REG.rescue"
 
 menu "System"
-   source "$BR2_EXTERNAL_RESCUE_PATH/package/core/rescue-system/Config.in"
-   source "$BR2_EXTERNAL_RESCUE_PATH/package/core/noto-sans-fonts/Config.in"
-
-menu "Boot"
-    source "$BR2_EXTERNAL_RESCUE_PATH/package/boot/plymouth/Config.in"
+	source "$BR2_EXTERNAL_RESCUE_PATH/package/core/rescue-system/Config.in"
 endmenu
 
+menu "Boot"
+	source "$BR2_EXTERNAL_RESCUE_PATH/package/boot/plymouth/Config.in"
+endmenu
+
+menu "Fonts"
+	source "$BR2_EXTERNAL_RESCUE_PATH/package/fonts/noto-sans-fonts/Config.in"
 endmenu
 
 endmenu
