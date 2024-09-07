@@ -1,5 +1,5 @@
 # users
-BR2_ROOTFS_USERS_TABLES="$(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/users.txt"
+BR2_ROOTFS_USERS_TABLES="$(BR2_EXTERNAL_RESCUE_PATH)/board/users.txt"
 
 # toolchain definition
 BR2_OPTIMIZE_S=y
@@ -63,8 +63,8 @@ BR2_PACKAGE_PLYMOUTH=y
 BR2_PACKAGE_NOTO_SANS_FONTS=y
 
 # images
-BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/scripts/post-build-script.sh"
-BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/rescue/scripts/post-image-script.sh"
+BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-build-script.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-image-script.sh"
 
 # Enables ccache
 BR2_CCACHE=y
