@@ -62,7 +62,6 @@ BR2_PACKAGE_SQUASHFS_XZ=y
 
 # REGlinux splash screen
 BR2_PACKAGE_PLYMOUTH=y
-BR2_PACKAGE_NOTO_SANS_FONTS=y
 
 # images
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-build-script.sh"
