@@ -47,7 +47,7 @@ jobs:
           cd REG-rescue
           git submodule init
           git submodule update
-          echo "RESCUEVERSION=$(grep -m 1 RESCUE_SYSTEM_VERSION /__w/REG-rescue/REG-rescue/package/rescue/core/rescue-system/rescue-system.mk | sed -e "s/.*=[ ]*//")" >> $GITHUB_ENV
+          echo "RESCUEVERSION=$(grep -m 1 RESCUE_SYSTEM_VERSION /__w/REG-rescue/REG-rescue/package/core/rescue-system/rescue-system.mk | sed -e "s/.*=[ ]*//")" >> $GITHUB_ENV
           mkdir -p /__w/REG-rescue/REG-linux-rescue-COMPILED
       - name: Compile aarch64
         if: ${{ ! cancelled() }}
