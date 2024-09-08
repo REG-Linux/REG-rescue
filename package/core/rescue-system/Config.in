@@ -19,12 +19,9 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_RISCV_ISA_RVC				if BR2_PACKAGE_RESCUE_TARGET_RISCV64
 
 	# minimal system required packages
-	select BR2_TARGET_RESCUE_IMAGES_DEFINITIONS
 	select BR2_PACKAGE_BASH                                 # bash shell, used as the interactive shell
 	select BR2_PACKAGE_RNG_TOOLS                            # system entropy. Currently disabled for RK3128 due to high CPU impact
 	select BR2_PACKAGE_HOST_GENEXT2FS                       # tools to generate rescue image
-	select BR2_TARGET_ROOTFS_SQUASHFS                       # tool to generate the target image
-	select BR2_PACKAGE_SQUASHFS_XZ                          # some squashfs options
 	select BR2_PACKAGE_DOSFSTOOLS                           # fat
 	select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT                  # fat
 	select BR2_PACKAGE_DOSFSTOOLS_MKFS_FAT                  # fat
@@ -57,14 +54,6 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_PACKAGE_XZ           # for updates
 	select BR2_PACKAGE_ZSTD         # for btrfs compression
 	select BR2_PACKAGE_LZ4          # for initramfs compression
-
-	# tools
-	select BR2_PACKAGE_SQUASHFS         # mksquash tool
-	select BR2_PACKAGE_NCDU             # Disk Usage
-
-	# REGlinux splash screen
-	select BR2_PACKAGE_PLYMOUTH
-	select BR2_PACKAGE_NOTO_SANS_FONTS
 
 	help
 		Rescue System
