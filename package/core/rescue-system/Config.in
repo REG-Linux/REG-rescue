@@ -19,8 +19,8 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_RISCV_ISA_RVC				if BR2_PACKAGE_RESCUE_TARGET_RISCV64
 
 	# minimal system required packages
-	select BR2_PACKAGE_BASH                                 # bash shell, used as the interactive shell
 	select BR2_PACKAGE_RNG_TOOLS                            # system entropy. Currently disabled for RK3128 due to high CPU impact
+	select BR2_PACKAGE_IRQBALANCE				# irq balancing
 	select BR2_PACKAGE_HOST_GENEXT2FS                       # tools to generate rescue image
 	select BR2_PACKAGE_DOSFSTOOLS                           # fat
 	select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT                  # fat
@@ -32,22 +32,16 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_PACKAGE_NTFS_3G                              # ntfs
 	select BR2_PACKAGE_NTFS_3G_NTFSPROGS                    # ntfs
 	select BR2_PACKAGE_BTRFS_PROGS                          # btrfs
-	select BR2_PACKAGE_UTIL_LINUX_LIBMOUNT                  # for util-linux compilation to work (so, may be removed in the future)
-	select BR2_PACKAGE_EUDEV_RULES_GEN                      # fork of systemd-udev with the goal of obtaining better compatibility with existing software such as OpenRC and Upstart
-	select BR2_PACKAGE_UTIL_LINUX_SETTERM                   # Set terminal attributes
 	select BR2_PACKAGE_USBMOUNT                             # usb key/sd card mounter
 	select BR2_PACKAGE_USBUTILS                             # usb key/sd card tools
-	select BR2_PACKAGE_ACPID                                if BR2_PACKAGE_RESCUE_TARGET_X86_64
 	select BR2_PACKAGE_KBD                                  # loadkeys
 
+	# Disk tool
 	select BR2_PACKAGE_PARTED                               # partition management (for the first boot)
 	select BR2_PACKAGE_GPTFDISK                             # fs resize
 	select BR2_PACKAGE_GPTFDISK_SGDISK                      # fs resize
 	select BR2_PACKAGE_E2FSPROGS                            # fs resize
 	select BR2_PACKAGE_E2FSPROGS_RESIZE2FS                  # fs resize
-
-	# irq balancing
-	select BR2_PACKAGE_IRQBALANCE
 
 	# compression tools
 	select BR2_PACKAGE_UNZIP        # for /userdata/system/upgrade/share.zip (What is this?)
