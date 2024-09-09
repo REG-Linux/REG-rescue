@@ -12,25 +12,25 @@ BOOT=$(grep /flash /proc/mounts | awk '{print $1}' | sed 's/p[012]//g')
 DISK=""
 
 for TYPE in /sys/class/block/mmcblk*/device/type; do
-  if grep -q "MMC" "${TYPE}"; then
-    DISK="/dev/$(echo "${TYPE}" | awk -F/ '{print $5}')"
-    break
-  fi
+    if grep -q "MMC" "${TYPE}"; then
+        DISK="/dev/$(echo "${TYPE}" | awk -F/ '{print $5}')"
+        break
+    fi
 done
 
 if [ -z "${DISK}" ]; then
-  echo "Can't find eMMC module!"
-  exit 1
+    echo "Can't find eMMC module!"
+    exit 1
 fi
 
 if [ "${BOOT}" = "${DISK}" ]; then
-  echo "Your device is booted from the eMMC module!"
-  exit 1
+    echo "Your device is booted from the eMMC module!"
+    exit 1
 fi
 
 echo ""
 echo -e "\033[36m==============================="
-echo "Installing @DISTRONAME@ to eMMC"
+echo "Installing REG-Linux to eMMC"
 echo -e "===============================\033[37m"
 echo ""
 echo "eMMC found at ${DISK}"
@@ -46,9 +46,9 @@ echo -n "WARNING: ALL DATA ON eMMC WILL BE ERASED! Continue (y/N)?  "
 read -n 1 ANSWER
 
 if [ ! "${ANSWER}" = "y" ]; then
-  echo ""
-  echo "Aborting..."
-  exit 0
+    echo ""
+    echo "Aborting..."
+    exit 0
 fi
 echo ""
 
@@ -85,8 +85,8 @@ sync
 
 echo "Adjusting partition UUIDs"
 
-sed -i "s/boot=UUID=[0-9a-f\-]*/boot=UUID=${UUID_SYSTEM}/g" ${TMP}/extlinux/extlinux.conf
-sed -i "s/disk=UUID=[0-9a-f\-]*/disk=UUID=${UUID_STORAGE}/g" ${TMP}/extlinux/extlinux.conf
+[ -f "/${TMP}/boot/extlinux/extlinux.conf" ] && sed -i "s/label=REGLINUX/uuid=${UUID_SYSTEM}/g;s/uuid=[0-9a-f\-]*/uuid=${UUID_SYSTEM}/g" ${TMP}/boot/extlinux/extlinux.conf
+[ -f "/${TMP}/boot/boot.ini" ] && sed -i "s/label=REGLINUX/uuid=${UUID_SYSTEM}/g;s/uuid=[0-9a-f\-]*/uuid=${UUID_SYSTEM}/g" ${TMP}/boot/boot.ini
 
 umount ${TMP}
 

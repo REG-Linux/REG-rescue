@@ -1,0 +1,5 @@
+config BR2_PACKAGE_INSTALL2EMMC
+	bool "install2emmc"
+
+	help
+	  https://github.com/LibreELEC/LibreELEC.tv/blob/master/projects/Allwinner/filesystem/usr/bin/install2emmc

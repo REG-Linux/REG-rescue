@@ -51,6 +51,9 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_PACKAGE_GZIP				# Standard GNU compressor.
 	select BR2_PACKAGE_TAR				# Manipulate tar files
 
+	# Tools
+	select BR2_PACKAGE_INSTALL2EMMC			if BR2_PACKAGE_RESCUE_TARGET_AARCH64 # Install system to emmc
+
 	help
 		Rescue System
 
