@@ -16,38 +16,40 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	bool "REG Rescue"
 
 	# RISC-V support needs a hack here to declare as RV64GC, needed for Rust
-	select BR2_RISCV_ISA_RVC				if BR2_PACKAGE_RESCUE_TARGET_RISCV64
+	select BR2_RISCV_ISA_RVC			if BR2_PACKAGE_RESCUE_TARGET_RISCV64
 
-	# minimal system required packages
-	select BR2_PACKAGE_RNG_TOOLS                            # system entropy. Currently disabled for RK3128 due to high CPU impact
-	select BR2_PACKAGE_IRQBALANCE				# irq balancing
-	select BR2_PACKAGE_HOST_GENEXT2FS                       # tools to generate rescue image
-	select BR2_PACKAGE_DOSFSTOOLS                           # fat
-	select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT                  # fat
-	select BR2_PACKAGE_DOSFSTOOLS_MKFS_FAT                  # fat
-	select BR2_PACKAGE_DOSFSTOOLS_FATLABEL                  # fat
-	select BR2_PACKAGE_EXFAT                                # exfat
-	select BR2_PACKAGE_EXFAT_UTILS                          # exfat
-	select BR2_PACKAGE_E2FSPROGS                            # ext4
-	select BR2_PACKAGE_NTFS_3G                              # ntfs
-	select BR2_PACKAGE_NTFS_3G_NTFSPROGS                    # ntfs
-	select BR2_PACKAGE_BTRFS_PROGS                          # btrfs
-	select BR2_PACKAGE_USBMOUNT                             # usb key/sd card mounter
-	select BR2_PACKAGE_USBUTILS                             # usb key/sd card tools
-	select BR2_PACKAGE_KBD                                  # loadkeys
+	# Minimal system required packages
+	select BR2_PACKAGE_RNG_TOOLS			# system entropy. Currently disabled for RK3128 due to high CPU impact
+	select BR2_PACKAGE_IRQBALANCE			# irq balancing
+	select BR2_PACKAGE_HOST_GENEXT2FS		# tools to generate rescue image
+	select BR2_PACKAGE_DOSFSTOOLS			# fat
+	select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT		# fat
+	select BR2_PACKAGE_DOSFSTOOLS_MKFS_FAT		# fat
+	select BR2_PACKAGE_DOSFSTOOLS_FATLABEL		# fat
+	select BR2_PACKAGE_EXFAT			# exfat
+	select BR2_PACKAGE_EXFAT_UTILS			# exfat
+	select BR2_PACKAGE_E2FSPROGS			# ext4
+	select BR2_PACKAGE_NTFS_3G			# ntfs
+	select BR2_PACKAGE_NTFS_3G_NTFSPROGS		# ntfs
+	select BR2_PACKAGE_BTRFS_PROGS			# btrfs
+	select BR2_PACKAGE_USBMOUNT			# usb key/sd card mounter
+	select BR2_PACKAGE_USBUTILS			# usb key/sd card tools
+	select BR2_PACKAGE_KBD				# loadkeys
 
 	# Disk tool
-	select BR2_PACKAGE_PARTED                               # partition management (for the first boot)
-	select BR2_PACKAGE_GPTFDISK                             # fs resize
-	select BR2_PACKAGE_GPTFDISK_SGDISK                      # fs resize
-	select BR2_PACKAGE_E2FSPROGS                            # fs resize
-	select BR2_PACKAGE_E2FSPROGS_RESIZE2FS                  # fs resize
+	select BR2_PACKAGE_PARTED			# partition management (for the first boot)
+	select BR2_PACKAGE_GPTFDISK			# fs resize
+	select BR2_PACKAGE_GPTFDISK_SGDISK		# fs resize
+	select BR2_PACKAGE_E2FSPROGS			# fs resize
+	select BR2_PACKAGE_E2FSPROGS_RESIZE2FS		# fs resize
 
-	# compression tools
-	select BR2_PACKAGE_UNZIP        # for /userdata/system/upgrade/share.zip (What is this?)
-	select BR2_PACKAGE_XZ           # for updates
-	select BR2_PACKAGE_ZSTD         # for btrfs compression
-	select BR2_PACKAGE_LZ4          # for initramfs compression
+	# Compression tools
+	select BR2_PACKAGE_UNZIP			# for /userdata/system/upgrade/share.zip (What is this?)
+	select BR2_PACKAGE_XZ				# for updates
+	select BR2_PACKAGE_ZSTD				# for btrfs compression
+	select BR2_PACKAGE_LZ4				# for initramfs compression
+	select BR2_PACKAGE_GZIP				# Standard GNU compressor.
+	select BR2_PACKAGE_TAR				# Manipulate tar files
 
 	help
 		Rescue System
