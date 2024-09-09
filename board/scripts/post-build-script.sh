@@ -61,6 +61,9 @@ then
     sed -i "s/start-stop-daemon -S -q /start-stop-daemon -S -q -N 10 /g" "${TARGET_DIR}/etc/init.d/S33rngd"  || exit 1 # set rngd niceness to 10 (to decrease slowdown of other processes)
 fi
 
+# make sure /etc/init.d scripts are executable
+chmod 755 "${TARGET_DIR}/etc/init.d/S"*
+
 # tmpfs or sysfs is mounted over theses directories
 # clear these directories is required for the upgrade (otherwise, tar xf fails)
 rm -rf "${TARGET_DIR}/"{var,run,sys,tmp} || exit 1
@@ -74,7 +77,7 @@ touch "${TARGET_DIR}/run/batocera.shadow"
 
 # enable serial console
 SYSTEM_GETTY_PORT=$(grep "BR2_TARGET_GENERIC_GETTY_PORT" "${BR2_CONFIG}" | sed 's/.*\"\(.*\)\"/\1/')
-if ! [[ -z "${SYSTEM_GETTY_PORT}" ]]; then
+if [[ -n "${SYSTEM_GETTY_PORT}" ]]; then
     SYSTEM_GETTY_BAUDRATE=$(grep -E "^BR2_TARGET_GENERIC_GETTY_BAUDRATE_[0-9]*=y$" "${BR2_CONFIG}" | sed -e s+'^BR2_TARGET_GENERIC_GETTY_BAUDRATE_\([0-9]*\)=y$'+'\1'+)
     sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -n -L -l /usr/bin/batocera-autologin '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
         ${TARGET_DIR}/etc/inittab
