@@ -1,4 +1,10 @@
-echo
-echo batocera-info 2>/dev/null
-echo "OS version: $(batocera-version)"
+echo '
+ ____  _____ ____       _     ___ _   _ _   ___  __
+|  _ \| ____/ ___|     | |   |_ _| \ | | | | \ \/ /
+| |_) |  _|| |  _ _____| |    | ||  \| | | | |\  /
+|  _ <| |__| |_| |_____| |___ | || |\  | |_| |/  \
+|_| \_\_____\____|     |_____|___|_| \_|\___//_/\_\
+
+           Retro Emulation Gaming Linux
+'
 echo

@@ -14,21 +14,9 @@ RESCUE_TARGET=$(grep -E "^BR2_PACKAGE_RESCUE_TARGET_[A-Z_0-9]*=y$" "${BR2_CONFIG
 # 2. Set home directory to /userdata/system instead of /root.
 sed -i "s|^root:x:.*$|root:x:0:0:root:/userdata/system:/bin/bash|g" "${TARGET_DIR}/etc/passwd" || exit 1
 
-rm -rf "${TARGET_DIR}/etc/dropbear" || exit 1
-ln -sf "/userdata/system/.ssh" "${TARGET_DIR}/etc/dropbear" || exit 1
-
-# we have custom urandom scripts
-rm -f "${TARGET_DIR}/etc/init.d/S20urandom" || exit 1
-
 # use /userdata/system/iptables.conf for S35iptables
 rm -f "${TARGET_DIR}/etc/iptables.conf" || exit 1
 ln -sf "/userdata/system/iptables.conf" "${TARGET_DIR}/etc/iptables.conf" || exit 1
-
-# acpid requires /var/run, so, requires S03populate
-if test -e "${TARGET_DIR}/etc/init.d/S02acpid"
-then
-    mv "${TARGET_DIR}/etc/init.d/S02acpid" "${TARGET_DIR}/etc/init.d/S05acpid" || exit 1
-fi
 
 # we want an empty boot directory (grub installation copy some files in the target boot directory)
 rm -rf "${TARGET_DIR}/boot/grub" || exit 1
@@ -55,11 +43,6 @@ then
 	mv "${TARGET_DIR}/etc/init.d/S45connman" "${TARGET_DIR}/etc/init.d/S08connman" || exit 1 # move to make before share
     fi
 fi
-if test -e "${TARGET_DIR}/etc/init.d/S21rngd"
-then
-    mv "${TARGET_DIR}/etc/init.d/S21rngd"    "${TARGET_DIR}/etc/init.d/S33rngd"    || exit 1 # move because it takes several seconds (on odroidgoa for example)
-    sed -i "s/start-stop-daemon -S -q /start-stop-daemon -S -q -N 10 /g" "${TARGET_DIR}/etc/init.d/S33rngd"  || exit 1 # set rngd niceness to 10 (to decrease slowdown of other processes)
-fi
 
 # make sure /etc/init.d scripts are executable
 chmod 755 "${TARGET_DIR}/etc/init.d/S"*
@@ -82,7 +65,3 @@ if [[ -n "${SYSTEM_GETTY_PORT}" ]]; then
     sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -n -L -l /usr/bin/batocera-autologin '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
         ${TARGET_DIR}/etc/inittab
 fi
-
-# delete batocera-boot.conf
-rm -f "${BINARIES_DIR}/batocera-boot.conf"
-
