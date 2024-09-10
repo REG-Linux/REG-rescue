@@ -54,6 +54,11 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	# Tools
 	select BR2_PACKAGE_INSTALL2EMMC			if BR2_PACKAGE_RESCUE_TARGET_AARCH64 # Install system to emmc
 
+	# text editor
+	select BR2_PACKAGE_NANO				# basic nano emulator
+	select BR2_PACKAGE_NANO_TINY			# optimize for size
+	select BR2_PACKAGE_NCURSES_WCHAR		# enable wide char support
+
 	help
 		Rescue System
 
