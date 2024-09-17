@@ -7,7 +7,7 @@ EXTRA_PKGS     ?=
 DOCKER_OPTS    ?=
 MAKE_JLEVEL    ?= $(shell nproc)
 BATCH_MODE     ?=
-PARALLEL_BUILD ?=
+PARALLEL_BUILD ?= y
 DOCKER         ?= docker
 
 -include $(LOCAL_MK)
