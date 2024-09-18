@@ -78,7 +78,7 @@ jobs:
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/armhf
       - name: Compile armv7
-        if: ${{ false }}
+        if: ${{ ! cancelled() }}
         shell: bash
         run: |
           curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armv7)" || ${{ true }}
@@ -91,7 +91,7 @@ jobs:
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/armv7
       - name: Compile mipsel
-        if: ${{ false }}
+        if: ${{ ! cancelled() }}
         shell: bash
         run: |
           curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 mipsel)" || ${{ true }}
@@ -104,7 +104,7 @@ jobs:
           cd /__w/REG-rescue/REG-rescue
           rm -rf /__w/REG-rescue/REG-rescue/output/mipsel
       - name: Compile riscv64
-        if: ${{ false }}
+        if: ${{ ! cancelled() }}
         shell: bash
         run: |
           curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 riscv64)" || ${{ true }}

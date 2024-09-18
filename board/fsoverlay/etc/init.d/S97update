@@ -87,7 +87,7 @@ function extractupgradefiles()
     # Exclude batocera-boot.conf to avoid losing user settings and restoring triggers
     # Also exclude files already updated
     # tar --no-same-owner is needed because fat partition does not support owner attributes
-    if ! tar -C /boot/ --no-same-owner --exclude='batocera-boot.conf' --exclude='boot/config.txt' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
+    if ! tar -C /boot/ --no-same-owner --exclude='batocera-boot.conf' --exclude='config.txt' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
     then
         echo "Error extracting files from ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
         exit 1
