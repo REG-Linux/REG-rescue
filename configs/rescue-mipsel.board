@@ -22,3 +22,5 @@ BR2_PACKAGE_HOST_MTOOLS=y
 
 # spi flash support
 BR2_PACKAGE_MTD=y
+# mtd disable ubihealthd because missing getrandom() headers
+BR2_PACKAGE_MTD_UBIHEALTHD=n
