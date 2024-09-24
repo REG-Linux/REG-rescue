@@ -15,67 +15,64 @@ determine_X_part() {
 }
 
 determine_default_share_part() {
-  BOOTPART=$(determine_X_part "/boot")
-  BOOTDISKPREFIX=$(determine_part_prefix "$BOOTPART")
-  # Make sure it is in the same disk
-  SHAREPART=$(blkid -o device -t LABEL=SHARE "$BOOTDISKPREFIX"*)
-  # Check that is a number
-  if echo "$SHAREPART" | sed -e s+'^.*\([0-9]\)$'+'\1'+ | grep -qE '^[0-9]$'
-  then
-    echo "$SHAREPART"
-  else
-    exit 1
-  fi
+    BOOTPART=$(determine_X_part "/boot")
+    BOOTDISKPREFIX=$(determine_part_prefix "$BOOTPART")
+    # Make sure it is in the same disk
+    SHAREPART=$(blkid -o device -t LABEL=SHARE "$BOOTDISKPREFIX"*)
+    # Check that is a number
+    if echo "$SHAREPART" | sed -e s+'^.*\([0-9]\)$'+'\1'+ | grep -qE '^[0-9]$'; then
+        echo "$SHAREPART"
+    else
+        exit 1
+    fi
 }
 
 determine_default_share_part_num() {
-  PARTSHARE=$(determine_default_share_part)
-  XSHARE=$(echo "$PARTSHARE" | sed -e s+'^.*\([0-9]\)$'+'\1'+)
-  if echo "$XSHARE" | grep -qE '^[0-9]$'
-  then
-    echo "$XSHARE"
-  else
-    exit 1
-  fi
+    PARTSHARE=$(determine_default_share_part)
+    XSHARE=$(echo "$PARTSHARE" | sed -e s+'^.*\([0-9]\)$'+'\1'+)
+    if echo "$XSHARE" | grep -qE '^[0-9]$'; then
+        echo "$XSHARE"
+    else
+        exit 1
+    fi
 }
 
 determine_part_prefix() {
-  # /dev/mmcblk0p3 => /dev/mmcblk0
-  # /dev/sda1      => /dev/sda
+    # /dev/mmcblk0p3 => /dev/mmcblk0
+    # /dev/sda1      => /dev/sda
 
-  # sometimes, it's pX, sometimes just an X : http://www.tldp.org/HOWTO/Partition-Mass-Storage-Definitions-Naming-HOWTO/x160.html
-  if echo "${1}" | grep -qE 'p[0-9]$'
-  then
-    echo "$1" | sed -e s+'p[0-9]$'+''+
-  else
-    echo "$1" | sed -e s+'[0-9]$'++
-  fi
+    # sometimes, it's pX, sometimes just an X : http://www.tldp.org/HOWTO/Partition-Mass-Storage-Definitions-Naming-HOWTO/x160.html
+    if echo "${1}" | grep -qE 'p[0-9]$'; then
+        echo "$1" | sed -e s+'p[0-9]$'+''+
+    else
+        echo "$1" | sed -e s+'[0-9]$'++
+    fi
 }
 
 PARTNAME=$1
 
 case "${PARTNAME}" in
-  "boot")
+"boot")
     determine_X_part "/boot"
-  ;;
+    ;;
 
-  "share_internal")
+"share_internal")
     determine_default_share_part
-  ;;
+    ;;
 
-  "share_internal_num")
+"share_internal_num")
     determine_default_share_part_num
-  ;;
+    ;;
 
-  "share")
+"share")
     determine_X_part "/userdata"
-  ;;
+    ;;
 
-  "prefix")
+"prefix")
     determine_part_prefix "$2"
-  ;;
+    ;;
 
-  *)
+*)
     echo "${0} <boot|share_internal|share_internal_num|prefix x>" >&2
     echo "  boot: the REG Linux boot partition" >&2
     echo "  share_internal: the REG Linux share internal partition " >&2
@@ -83,7 +80,7 @@ case "${PARTNAME}" in
     echo "  share: the REG Linux share partition " >&2
     echo "  prefix x: the disk of the partition x (without the partition number)" >&2
     exit 1
-  ;;
+    ;;
 esac
 
 exit 0

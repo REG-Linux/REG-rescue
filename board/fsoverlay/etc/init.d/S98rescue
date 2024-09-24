@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # only at start AND if triggered
-if [ "$1" != "start" ] || [ ! -f /boot/REG_RESCUE ]
-then
-    exit 0
+if [ "$1" != "start" ] || [ ! -f /boot/REG_RESCUE ]; then
+	exit 0
 fi
 
 /usr/bin/plymouth --wait quit --retain-splash

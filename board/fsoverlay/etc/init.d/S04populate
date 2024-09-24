@@ -1,8 +1,7 @@
 #!/bin/sh
 
-if test "$1" != "start"
-then
-  exit 0
+if test "$1" != "start"; then
+	exit 0
 fi
 
 # cache

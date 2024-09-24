@@ -1,13 +1,11 @@
 #!/bin/sh
 
-if test "$1" != "start"
-then
-  exit 0
+if test "$1" != "start"; then
+	exit 0
 fi
 
 # force a date over 1980 because of fat32 (to make rsync to work)
 # can only be in future of writing that script
-if test "$(date +%Y)" -lt 1980
-   then
-       date -s '2024-09-01 01:00:00'
+if test "$(date +%Y)" -lt 1980; then
+	date -s '2024-09-01 01:00:00'
 fi

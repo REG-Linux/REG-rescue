@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # Quit if is not start OR rescue mode is requested OR no update trigger exists
-if [ "$1" != "start" ] || [ -f /boot/REG_RESCUE ] || [ ! -f /boot/REG_UPDATE ]
-then
-    exit 0
+if [ "$1" != "start" ] || [ -f /boot/REG_RESCUE ] || [ ! -f /boot/REG_UPDATE ]; then
+	exit 0
 fi
 
 # Move REG_UPDATE to /tmp to not loop rescue mode
@@ -15,110 +14,101 @@ BOOTCONF="/boot/batocera-boot.conf"
 LOG="/tmp/rescue.log"
 
 # Display error with timeout
-function display_error()
-{
-    /usr/bin/plymouth display-message --text="ERROR! Please check the log at: /boot/rescue.log"
-    cp --backup=simple "$LOG" /boot/
-    touch /boot/REG_RESCUE
-    exit 1
+function display_error() {
+	/usr/bin/plymouth display-message --text="ERROR! Please check the log at: /boot/rescue.log"
+	cp --backup=simple "$LOG" /boot/
+	touch /boot/REG_RESCUE
+	exit 1
 }
 
 # UI Output with plymouth
-function plymouth_output()
-{
-    local percent="$1"
-    local text="$2"
+function plymouth_output() {
+	local percent="$1"
+	local text="$2"
 
-    /usr/bin/plymouth system-update --progress "$percent"
-    /usr/bin/plymouth display-message --text="$text"
+	/usr/bin/plymouth system-update --progress "$percent"
+	/usr/bin/plymouth display-message --text="$text"
 }
 
 # Executing parameters and watch background pid
 # Changes text messages parsed to dialog --mixedgauge
-function cmdoutput()
-{
-    local text="$3"
-    local cmd="$2"
-    local percent="$1"
-    local pid ret
+function cmdoutput() {
+	local text="$3"
+	local cmd="$2"
+	local percent="$1"
+	local pid ret
 
-    echo "cmd: $cmd" >> "$LOG"
-    $cmd >> "$LOG" 2>&1 &
-    pid=$!
-    plymouth_output "$percent" "$text"
-    wait $pid
-    ret=$?
-    echo "cmd code:$ret" >> "$LOG"
-    if [ $ret -ne 0 ]; then
-        display_error
-    fi
-    return $ret
+	echo "cmd: $cmd" >>"$LOG"
+	$cmd >>"$LOG" 2>&1 &
+	pid=$!
+	plymouth_output "$percent" "$text"
+	wait $pid
+	ret=$?
+	echo "cmd code:$ret" >>"$LOG"
+	if [ $ret -ne 0 ]; then
+		display_error
+	fi
+	return $ret
 }
 
-function mountshareinternal()
-{
-    SHAREMOUNT="/tmp/SHARE_INTERNAL"
-    mkdir -p "$SHAREMOUNT"
-    PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
-    echo "cmd: batocera-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >> "$LOG"
-    if ! batocera-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >> "$LOG" 2>&1
-    then
-        echo "Error mounting SHARE partition!" >> "$LOG"
-        display_error
-    fi
+function mountshareinternal() {
+	SHAREMOUNT="/tmp/SHARE_INTERNAL"
+	mkdir -p "$SHAREMOUNT"
+	PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
+	echo "cmd: batocera-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
+	if ! batocera-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
+		echo "Error mounting SHARE partition!" >>"$LOG"
+		display_error
+	fi
 }
 
 # Remove the trigger(s)
-function remove_trigger()
-{
-    local trigger="$1"
-    sed -i -e "s/^[ ]*${trigger}/#${trigger}/g" "${BOOTCONF}"
+function remove_trigger() {
+	local trigger="$1"
+	sed -i -e "s/^[ ]*${trigger}/#${trigger}/g" "${BOOTCONF}"
 }
 
 # Edit given file with new boot partition UUID
-function replaceuuid()
-{
-    # First try to replace label=REGLINUX with uuid=*, just in case we are updating a very old disk
-    find "/boot/" -type f \( -iname "extlinux.conf" -o -iname "cmdline.txt" -o -iname "boot.ini" -o -iname "uEnv.txt" -o -iname "syslinux.cfg" -o -iname "grub.cfg" \) -exec sed -i "s/label=REGLINUX/uuid=${NEWUUID}/g;s/uuid=[a-fA-F0-9-]*/uuid=${NEWUUID}/g" {} \+
+function replaceuuid() {
+	# First try to replace label=REGLINUX with uuid=*, just in case we are updating a very old disk
+	find "/boot/" -type f \( -iname "extlinux.conf" -o -iname "cmdline.txt" -o -iname "boot.ini" -o -iname "uEnv.txt" -o -iname "syslinux.cfg" -o -iname "grub.cfg" \) -exec sed -i "s/label=REGLINUX/uuid=${NEWUUID}/g;s/uuid=[a-fA-F0-9-]*/uuid=${NEWUUID}/g" {} \+
 }
 
-function extractupgradefiles()
-{
-    # Exclude batocera-boot.conf to avoid losing user settings and restoring triggers
-    # Also exclude files already updated
-    # tar --no-same-owner is needed because fat partition does not support owner attributes
-    if ! tar -C /boot/ --no-same-owner --exclude='batocera-boot.conf' --exclude='config.txt' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
-    then
-        echo "Error extracting files from ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
-        exit 1
-    fi
+function extractupgradefiles() {
+	# Exclude batocera-boot.conf to avoid losing user settings and restoring triggers
+	# Also exclude files already updated
+	# tar --no-same-owner is needed because fat partition does not support owner attributes
+	if ! tar -C /boot/ --no-same-owner --exclude='batocera-boot.conf' --exclude='config.txt' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"; then
+		echo "Error extracting files from ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
+		exit 1
+	fi
 }
 
 plymouth_output 5 "Creating list of tasks"
 
-TOTALSTEPS=0    # To help with progress bar
-CURRENTSTEP=0   # use multiples of 100 (100, 200, 300, etc., instead of 1, 2, 3, etc.)
-TASKS=0         # 1111
-                # ^^^^
-                # ||||_ Resize (expand) share_internal partition
-                # |||__ Format share_internal partition
-                # ||___ Change UUID of boot partition
-                # |____ Finish upgrade
+TOTALSTEPS=0  # To help with progress bar
+CURRENTSTEP=0 # use multiples of 100 (100, 200, 300, etc., instead of 1, 2, 3, etc.)
+TASKS=0       # 1111
+# ^^^^
+# ||||_ Resize (expand) share_internal partition
+# |||__ Format share_internal partition
+# ||___ Change UUID of boot partition
+# |____ Finish upgrade
 
 if grep -qE '^[ ]*autoresize[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
-    ((TOTALSTEPS+=10))
-    ((TASKS+=1))
+	((TOTALSTEPS += 10))
+	((TASKS += 1))
 fi
 
 FORMAT_INTERNAL_TYPE=$(grep -m 1 -E '^[ ]*format-internal[ ]*=.*$' "${BOOTCONF}" | sed -e "s+^[ ]*format-internal[ ]*=[ ]*\(.*\)[ ]*$+\1+")
 if [ -n "$FORMAT_INTERNAL_TYPE" ]; then
-    ((TOTALSTEPS+=6))
-    ((TASKS+=10))
+	((TOTALSTEPS += 6))
+	((TASKS += 10))
 fi
 
 if grep -qE '^[ ]*newbootuuid[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
-    ((TOTALSTEPS+=4))
-    ((TASKS+=100))
+	((TOTALSTEPS += 4))
+	((TASKS += 100))
 fi
 
 # Search for upgrade file to finish upgrading REG-linux
@@ -128,165 +118,163 @@ SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
 
 board=$(cat /boot/boot/batocera.board)
 if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
-    ((TOTALSTEPS+=6))
-    ((TASKS+=1000))
+	((TOTALSTEPS += 6))
+	((TASKS += 1000))
 fi
 
 ### Tasks list done.
-[ "$TASKS" -eq 0 ] && exit 0    # Greater than 0 if there is something to do
+[ "$TASKS" -eq 0 ] && exit 0 # Greater than 0 if there is something to do
 
 # finish upgrading REG-linux if upgrade file found
 if [ "$TASKS" -ge 1000 ]; then
 
-    # Mount share_internal again if needed
-    SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
-    [ -z "$SHAREMOUNT" ] && mountshareinternal
+	# Mount share_internal again if needed
+	SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
+	[ -z "$SHAREMOUNT" ] && mountshareinternal
 
-    echo "Found update: ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" >> "$LOG"
+	echo "Found update: ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" >>"$LOG"
 
-    # First get the list of available files to see if it includes reglinux
-    if tar --zstd -tf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" | grep 'boot/reglinux'
-    then
-    	# Delete previous reglinux because we need the space
-		((CURRENTSTEP+=50))
+	# First get the list of available files to see if it includes reglinux
+	if tar --zstd -tf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" | grep 'boot/reglinux'; then
+		# Delete previous reglinux because we need the space
+		((CURRENTSTEP += 50))
 		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "rm -f /boot/boot/reglinux" "Deleting previous REG-linux OS"
-    fi
+	fi
 
-    ((CURRENTSTEP+=100))
-    cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "extractupgradefiles" "Extracting upgrade files"
+	((CURRENTSTEP += 100))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "extractupgradefiles" "Extracting upgrade files"
 
-    # Fix uuid
-    ((CURRENTSTEP+=400))
-    BOOTPART=$(/usr/bin/batocera-part boot)
-    NEWUUID=$(blkid -o value -s UUID "$BOOTPART")
-    if [ -n "$NEWUUID" ]
-    then
-        echo "Updating boot files with boot partition UUID" >> "$LOG"
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "replaceuuid" "Updating UUID in boot files"
-    else
-        echo "Error getting UUID of boot partition" >> "$LOG"
-        display_error
-    fi
-    mv "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" "${SHAREMOUNT}/system/upgrade/already-installed-boot-${board}.tar.zst"
-    ((TASKS-=1000))
+	# Fix uuid
+	((CURRENTSTEP += 400))
+	BOOTPART=$(/usr/bin/batocera-part boot)
+	NEWUUID=$(blkid -o value -s UUID "$BOOTPART")
+	if [ -n "$NEWUUID" ]; then
+		echo "Updating boot files with boot partition UUID" >>"$LOG"
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "replaceuuid" "Updating UUID in boot files"
+	else
+		echo "Error getting UUID of boot partition" >>"$LOG"
+		display_error
+	fi
+	mv "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" "${SHAREMOUNT}/system/upgrade/already-installed-boot-${board}.tar.zst"
+	((TASKS -= 1000))
 fi
 
 # only when random UUID for boot partition is wanted (usually first boot only)
 if [ "$TASKS" -ge 100 ]; then
 
-    BOOTPART="$(/usr/bin/batocera-part boot)"
+	BOOTPART="$(/usr/bin/batocera-part boot)"
 
-    echo "Changing UUID of boot partition to a new random UUID" >> "$LOG"
-    ((CURRENTSTEP+=50))
-    cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "fatlabel -i -r $BOOTPART" "Changing boot partition UUID"
-    NEWUUID=$(blkid -c /dev/null -o value -s UUID "$BOOTPART")
-    echo "New UUID: $NEWUUID" >> "$LOG"
+	echo "Changing UUID of boot partition to a new random UUID" >>"$LOG"
+	((CURRENTSTEP += 50))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "fatlabel -i -r $BOOTPART" "Changing boot partition UUID"
+	NEWUUID=$(blkid -c /dev/null -o value -s UUID "$BOOTPART")
+	echo "New UUID: $NEWUUID" >>"$LOG"
 
-    ((CURRENTSTEP+=100))
-    if [ -n "$NEWUUID" ]; then
-        echo "Updating boot files with new UUID" >> "$LOG"
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "replaceuuid" "Updating boot files with new UUID"
-    else
-        echo "Error getting UUID of boot partition" >> "$LOG"
-        display_error
-    fi
+	((CURRENTSTEP += 100))
+	if [ -n "$NEWUUID" ]; then
+		echo "Updating boot files with new UUID" >>"$LOG"
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "replaceuuid" "Updating boot files with new UUID"
+	else
+		echo "Error getting UUID of boot partition" >>"$LOG"
+		display_error
+	fi
 
-    # remove the trigger
-    ((TASKS-=100))
-    ((CURRENTSTEP+=200))
-    cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger newbootuuid" "Removing trigger"
+	# remove the trigger
+	((TASKS -= 100))
+	((CURRENTSTEP += 200))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger newbootuuid" "Removing trigger"
 fi
 
 # format internal share if wanted
 if [ "$TASKS" -ge 10 ]; then
 
-    # umount share_internal
-    umount -A "$SHAREPART"
-    ((CURRENTSTEP+=200))
-    case "$FORMAT_INTERNAL_TYPE" in
-    "btrfs")
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.btrfs -L SHARE -f ${SHAREPART}" "Formatting to btrfs"
-    ;;
-    "ext4")
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.ext4 -L SHARE -q -F -F ${SHAREPART}" "Formatting to ext4"
-    ;;
-    "exfat")
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.exfat -n SHARE ${SHAREPART}" "Formatting to exfat"
-    ;;
-    *)
-        echo "Invalid file system type: $FORMAT_INTERNAL_TYPE" >> "$LOG"
-        display_error
-    ;;
-    esac
-    # remove the trigger
-    ((TASKS-=10))
-    ((CURRENTSTEP+=350))
-    cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger format-internal" "Removing trigger"
+	# umount share_internal
+	umount -A "$SHAREPART"
+	((CURRENTSTEP += 200))
+	case "$FORMAT_INTERNAL_TYPE" in
+	"btrfs")
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.btrfs -L SHARE -f ${SHAREPART}" "Formatting to btrfs"
+		;;
+	"ext4")
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.ext4 -L SHARE -q -F -F ${SHAREPART}" "Formatting to ext4"
+		;;
+	"exfat")
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.exfat -n SHARE ${SHAREPART}" "Formatting to exfat"
+		;;
+	*)
+		echo "Invalid file system type: $FORMAT_INTERNAL_TYPE" >>"$LOG"
+		display_error
+		;;
+	esac
+	# remove the trigger
+	((TASKS -= 10))
+	((CURRENTSTEP += 350))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger format-internal" "Removing trigger"
 fi
 
 # only when resizing of share_internal is wanted (usually first boot only)
 if [ "$TASKS" -ge 1 ]; then
 
-    # /userdata partition
-    PARTNUM=$(batocera-part "share_internal_num")
-    echo "Partition name: $SHAREPART & number: $PARTNUM" >> "$LOG"
+	# /userdata partition
+	PARTNUM=$(batocera-part "share_internal_num")
+	echo "Partition name: $SHAREPART & number: $PARTNUM" >>"$LOG"
 
-    # boot disk
-    DISK=$(batocera-part prefix "${SHAREPART}")
-    echo "Disk = $DISK" >> "$LOG"
+	# boot disk
+	DISK=$(batocera-part prefix "${SHAREPART}")
+	echo "Disk = $DISK" >>"$LOG"
 
-    # only for ext4
-    PARTTYPE=$(blkid -o value -s TYPE "${SHAREPART}")
-    echo "Partition type = ${PARTTYPE}" >> "$LOG"
-    if [ "${PARTTYPE}" = "ext4" ]; then
+	# only for ext4
+	PARTTYPE=$(blkid -o value -s TYPE "${SHAREPART}")
+	echo "Partition type = ${PARTTYPE}" >>"$LOG"
+	if [ "${PARTTYPE}" = "ext4" ]; then
 
-        # umount share_internal
-        while grep -m 1 -E "^$SHAREPART " /proc/mounts; do
-            umount "$SHAREPART"
-            sleep 1
-        done
-        # partition table
-        TABLETYPE=$(blkid -o value -s PTTYPE "${DISK}")
-        echo "Disk partition table type = $TABLETYPE" >> "$LOG"
+		# umount share_internal
+		while grep -m 1 -E "^$SHAREPART " /proc/mounts; do
+			umount "$SHAREPART"
+			sleep 1
+		done
+		# partition table
+		TABLETYPE=$(blkid -o value -s PTTYPE "${DISK}")
+		echo "Disk partition table type = $TABLETYPE" >>"$LOG"
 
-        # if GPT, move backup data structures to the end of the disk
-        ((CURRENTSTEP+=50))
-        if [ "${TABLETYPE}" = "gpt" ]; then
-            echo "Moving 2nd GPT table to the end of the disk" >> "$LOG"
-            cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "sgdisk -e ${DISK}" "Aligning GPT table"
-        fi
+		# if GPT, move backup data structures to the end of the disk
+		((CURRENTSTEP += 50))
+		if [ "${TABLETYPE}" = "gpt" ]; then
+			echo "Moving 2nd GPT table to the end of the disk" >>"$LOG"
+			cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "sgdisk -e ${DISK}" "Aligning GPT table"
+		fi
 
-        # resize the partition
-        echo "Resizing the partition to 100%" >> "$LOG"
-        ((CURRENTSTEP+=150))
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "parted -s -m -f ${DISK} resizepart ${PARTNUM} 100%" "Resizing partition"
+		# resize the partition
+		echo "Resizing the partition to 100%" >>"$LOG"
+		((CURRENTSTEP += 150))
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "parted -s -m -f ${DISK} resizepart ${PARTNUM} 100%" "Resizing partition"
 
-        # update the kernel
-        echo "Updating the kernel" >> "$LOG"
-        ((CURRENTSTEP+=100))
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "partprobe ${DISK}" "Informing the Kernel"
+		# update the kernel
+		echo "Updating the kernel" >>"$LOG"
+		((CURRENTSTEP += 100))
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "partprobe ${DISK}" "Informing the Kernel"
 
-        # check & resize the ext4 file system
-        echo "Checking ext4 file system" >> "$LOG"
-        ((CURRENTSTEP+=200))
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "e2fsck -f -p ${SHAREPART}" "Checking /userdata integrity"
+		# check & resize the ext4 file system
+		echo "Checking ext4 file system" >>"$LOG"
+		((CURRENTSTEP += 200))
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "e2fsck -f -p ${SHAREPART}" "Checking /userdata integrity"
 
-        echo "Expanding ext4 the file system" >> "$LOG"
-        ((CURRENTSTEP+=250))
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "resize2fs ${SHAREPART}" "Expanding the file system"
+		echo "Expanding ext4 the file system" >>"$LOG"
+		((CURRENTSTEP += 250))
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "resize2fs ${SHAREPART}" "Expanding the file system"
 
-        echo "Checking ext4 file system" >> "$LOG"
-        ((CURRENTSTEP+=200))
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "e2fsck -f -p ${SHAREPART}" "Checking ext4 file system"
-    fi
-    # remove the trigger
-    ((CURRENTSTEP+=100))
-    cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger autoresize" "Removing trigger"
+		echo "Checking ext4 file system" >>"$LOG"
+		((CURRENTSTEP += 200))
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "e2fsck -f -p ${SHAREPART}" "Checking ext4 file system"
+	fi
+	# remove the trigger
+	((CURRENTSTEP += 100))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger autoresize" "Removing trigger"
 fi
 
 # finally disk sync
-echo "Final sync" >> "$LOG"
-((CURRENTSTEP+=50))
+echo "Final sync" >>"$LOG"
+((CURRENTSTEP += 50))
 cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "sync" "Syncing disk data"
 
 mount -o remount,ro /boot || true
