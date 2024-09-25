@@ -10,7 +10,7 @@ mount -o remount,rw /boot
 mv /boot/REG_UPDATE /tmp/
 # Don't remount ro yet
 
-BOOTCONF="/boot/batocera-boot.conf"
+BOOTCONF="/boot/system-boot.conf"
 LOG="/tmp/rescue.log"
 
 # Display error with timeout
@@ -75,10 +75,10 @@ function replaceuuid() {
 }
 
 function extractupgradefiles() {
-	# Exclude batocera-boot.conf to avoid losing user settings and restoring triggers
+	# Exclude system-boot.conf to avoid losing user settings and restoring triggers
 	# Also exclude files already updated
 	# tar --no-same-owner is needed because fat partition does not support owner attributes
-	if ! tar -C /boot/ --no-same-owner --exclude='batocera-boot.conf' --exclude='config.txt' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"; then
+	if ! tar -C /boot/ --no-same-owner --exclude='system-boot.conf' --exclude='config.txt' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"; then
 		echo "Error extracting files from ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
 		exit 1
 	fi
@@ -116,7 +116,7 @@ SHAREPART=$(batocera-part share_internal)
 SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
 [ -z "$SHAREMOUNT" ] && mountshareinternal
 
-board=$(cat /boot/boot/batocera.board)
+board=$(cat /boot/boot/system.board)
 if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
 	((TOTALSTEPS += 6))
 	((TASKS += 1000))

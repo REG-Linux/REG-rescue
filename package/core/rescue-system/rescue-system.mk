@@ -34,9 +34,9 @@ endif
 define RESCUE_SYSTEM_INSTALL_TARGET_CMDS
 
 	# version/arch
-	mkdir -p $(TARGET_DIR)/usr/share/batocera
-	echo -n "$(RESCUE_SYSTEM_ARCH)" > $(TARGET_DIR)/usr/share/batocera/batocera.arch
-	echo $(RESCUE_SYSTEM_VERSION)$(RESCUE_SYSTEM_COMMIT) $(RESCUE_SYSTEM_DATE_TIME) > $(TARGET_DIR)/usr/share/batocera/batocera.version
+	mkdir -p $(TARGET_DIR)/usr/share/reglinux
+	echo -n "$(RESCUE_SYSTEM_ARCH)" > $(TARGET_DIR)/usr/share/reglinux/system.arch
+	echo $(RESCUE_SYSTEM_VERSION)$(RESCUE_SYSTEM_COMMIT) $(RESCUE_SYSTEM_DATE_TIME) > $(TARGET_DIR)/usr/share/reglinux/system.version
 
 	# variables
 	mkdir -p $(TARGET_DIR)/etc/profile.d

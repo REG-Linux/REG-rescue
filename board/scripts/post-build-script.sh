@@ -52,7 +52,7 @@ chmod 755 "${TARGET_DIR}/etc/init.d/S"*
 rm -rf "${TARGET_DIR}/"{var,run,sys,tmp} || exit 1
 mkdir "${TARGET_DIR}/"{var,run,sys,tmp}  || exit 1
 
-# make /etc/shadow a file generated from /boot/batocera-boot.conf for security
+# make /etc/shadow a file generated from /boot/system-boot.conf for security
 rm -f "${TARGET_DIR}/etc/shadow" || exit 1
 touch "${TARGET_DIR}/run/batocera.shadow"
 (cd "${TARGET_DIR}/etc" && ln -sf "../run/batocera.shadow" "shadow") || exit 1
