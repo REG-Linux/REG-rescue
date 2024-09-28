@@ -44,9 +44,9 @@ define RESCUE_SYSTEM_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/dbus.sh $(TARGET_DIR)/etc/profile.d/dbus.sh
 
     # Other scripts needed
-    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/batocera-mount $(TARGET_DIR)/usr/bin/
-    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/batocera-part $(TARGET_DIR)/usr/bin/
-    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/batocera-usbmount $(TARGET_DIR)/usr/bin/
+    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/system-mount $(TARGET_DIR)/usr/bin/
+    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/system-part $(TARGET_DIR)/usr/bin/
+    $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_RESCUE_PATH)/package/core/rescue-system/system-usbmount $(TARGET_DIR)/usr/bin/
 
 endef
 
