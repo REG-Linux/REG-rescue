@@ -55,8 +55,8 @@ function mountshareinternal() {
 	SHAREMOUNT="/tmp/SHARE_INTERNAL"
 	mkdir -p "$SHAREMOUNT"
 	PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
-	echo "cmd: batocera-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
-	if ! batocera-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
+	echo "cmd: system-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
+	if ! system-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
 		echo "Error mounting SHARE partition!" >>"$LOG"
 		display_error
 	fi
@@ -112,7 +112,7 @@ if grep -qE '^[ ]*newbootuuid[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
 fi
 
 # Search for upgrade file to finish upgrading REG-linux
-SHAREPART=$(batocera-part share_internal)
+SHAREPART=$(system-part share_internal)
 SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
 [ -z "$SHAREMOUNT" ] && mountshareinternal
 
@@ -146,7 +146,7 @@ if [ "$TASKS" -ge 1000 ]; then
 
 	# Fix uuid
 	((CURRENTSTEP += 400))
-	BOOTPART=$(/usr/bin/batocera-part boot)
+	BOOTPART=$(/usr/bin/system-part boot)
 	NEWUUID=$(blkid -o value -s UUID "$BOOTPART")
 	if [ -n "$NEWUUID" ]; then
 		echo "Updating boot files with boot partition UUID" >>"$LOG"
@@ -162,7 +162,7 @@ fi
 # only when random UUID for boot partition is wanted (usually first boot only)
 if [ "$TASKS" -ge 100 ]; then
 
-	BOOTPART="$(/usr/bin/batocera-part boot)"
+	BOOTPART="$(/usr/bin/system-part boot)"
 
 	echo "Changing UUID of boot partition to a new random UUID" >>"$LOG"
 	((CURRENTSTEP += 50))
@@ -216,11 +216,11 @@ fi
 if [ "$TASKS" -ge 1 ]; then
 
 	# /userdata partition
-	PARTNUM=$(batocera-part "share_internal_num")
+	PARTNUM=$(system-part "share_internal_num")
 	echo "Partition name: $SHAREPART & number: $PARTNUM" >>"$LOG"
 
 	# boot disk
-	DISK=$(batocera-part prefix "${SHAREPART}")
+	DISK=$(system-part prefix "${SHAREPART}")
 	echo "Disk = $DISK" >>"$LOG"
 
 	# only for ext4
