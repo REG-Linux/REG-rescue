@@ -32,15 +32,16 @@ then
 fi
 if test -e "${TARGET_DIR}/etc/init.d/S40network"
 then
-    mv "${TARGET_DIR}/etc/init.d/S40network" "${TARGET_DIR}/etc/init.d/S07network" || exit 1 # move to make ifaces up sooner, mainly mountable/unmountable before/after share
+#    mv "${TARGET_DIR}/etc/init.d/S40network" "${TARGET_DIR}/etc/init.d/S07network" || exit 1 # move to make ifaces up sooner, mainly mountable/unmountable before/after share
+    rm "${TARGET_DIR}/etc/init.d/S40network"
 fi
 if test -e "${TARGET_DIR}/etc/init.d/S45connman"
 then
     if test -e "${TARGET_DIR}/etc/init.d/S08connman"
     then
-	rm -f "${TARGET_DIR}/etc/init.d/S45connman" || exit 1
+        rm -f "${TARGET_DIR}/etc/init.d/S45connman" || exit 1
     else
-	mv "${TARGET_DIR}/etc/init.d/S45connman" "${TARGET_DIR}/etc/init.d/S08connman" || exit 1 # move to make before share
+        mv "${TARGET_DIR}/etc/init.d/S45connman" "${TARGET_DIR}/etc/init.d/S08connman" || exit 1 # move to make before share
     fi
 fi
 
