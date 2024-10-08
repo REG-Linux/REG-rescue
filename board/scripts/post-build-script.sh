@@ -30,11 +30,6 @@ if test -e "${TARGET_DIR}/etc/init.d/S30dbus"
 then
     mv "${TARGET_DIR}/etc/init.d/S30dbus"    "${TARGET_DIR}/etc/init.d/S01dbus"    || exit 1 # move really before for network (connman prerequisite) and pipewire
 fi
-if test -e "${TARGET_DIR}/etc/init.d/S40network"
-then
-#    mv "${TARGET_DIR}/etc/init.d/S40network" "${TARGET_DIR}/etc/init.d/S07network" || exit 1 # move to make ifaces up sooner, mainly mountable/unmountable before/after share
-    rm "${TARGET_DIR}/etc/init.d/S40network"
-fi
 if test -e "${TARGET_DIR}/etc/init.d/S45connman"
 then
     if test -e "${TARGET_DIR}/etc/init.d/S08connman"
