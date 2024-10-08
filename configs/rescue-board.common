@@ -70,5 +70,8 @@ BR2_PACKAGE_PLYMOUTH=y
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-build-script.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-image-script.sh"
 
+# Disable network scripts
+# BR2_PACKAGE_IFUPDOWN_SCRIPTS is not set
+
 # Enables ccache
 BR2_CCACHE=y
