@@ -5,7 +5,7 @@ if [ "$1" != "start" ] || [ ! -f /boot/REG_RESCUE ]; then
 	exit 0
 fi
 
-/usr/bin/plymouth --wait quit --retain-splash
+/usr/bin/plymouth --wait quit
 
 mount -o remount,rw /boot
 rm -f /boot/REG_RESCUE
