@@ -6,6 +6,8 @@ start)
         mount -o remount,rw /boot
         rm -f /boot/REG_RESCUE
         /usr/bin/plymouth --wait quit
+    else
+        reboot
     fi
     ;;
 stop)
