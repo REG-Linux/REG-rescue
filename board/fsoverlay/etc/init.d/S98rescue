@@ -1,13 +1,22 @@
 #!/bin/bash
 
-# only at start AND if triggered
-if [ "$1" != "start" ] || [ ! -f /boot/REG_RESCUE ]; then
-	exit 0
-fi
-
-/usr/bin/plymouth --wait quit
-
-mount -o remount,rw /boot
-rm -f /boot/REG_RESCUE
-
-/bin/bash
+case "$1" in
+start)
+    if [ -f /boot/REG_RESCUE ]; then
+        mount -o remount,rw /boot
+        rm -f /boot/REG_RESCUE
+        /usr/bin/plymouth --wait quit
+    fi
+    ;;
+stop)
+    if [ -f /tmp/REG_UPDATE ]; then
+        /usr/bin/plymouth change-mode --reboot
+    else
+        /usr/bin/plymouth change-mode --shutdown
+    fi
+    /usr/bin/plymouth --show-splash
+    ;;
+*)
+    exit 0
+    ;;
+esac
