@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Quit if is not start OR rescue mode is requested OR no update trigger exists
-if [ "$1" != "start" ] || [ -f /boot/REG_RESCUE ] || [ ! -f /boot/REG_UPDATE ]; then
+if [ "$1" != "start" ] || [ ! -f /boot/REG_UPDATE ]; then
 	exit 0
 fi
 
