@@ -111,14 +111,16 @@ if grep -qE '^[ ]*newbootuuid[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
 	((TASKS += 100))
 fi
 
-# Search for upgrade file to finish upgrading REG-linux
+# Search for share_internal mount point
 SHAREPART=$(system-part share_internal)
 SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
+# Mount share_internal if not yet mounted
 [ -z "$SHAREMOUNT" ] && mountshareinternal
 
+# Search for upgrade file to finish upgrading REG-linux
 board=$(cat /boot/boot/system.board)
 if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
-	((TOTALSTEPS += 6))
+	((TOTALSTEPS += 7))
 	((TASKS += 1000))
 fi
 
@@ -127,10 +129,6 @@ fi
 
 # finish upgrading REG-linux if upgrade file found
 if [ "$TASKS" -ge 1000 ]; then
-
-	# Mount share_internal again if needed
-	SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
-	[ -z "$SHAREMOUNT" ] && mountshareinternal
 
 	echo "Found update: ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" >>"$LOG"
 
@@ -156,6 +154,10 @@ if [ "$TASKS" -ge 1000 ]; then
 		display_error
 	fi
 	mv "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" "${SHAREMOUNT}/system/upgrade/already-installed-boot-${board}.tar.zst"
+
+    # Run /boot/runafterupgrade.sh if found, using current environment
+	((CURRENTSTEP += 100))
+	[ -f /boot/runafterupgrade.sh ] && cmdoutput $((CURRENTSTEP / TOTALSTEPS)) ". /boot/runafterupgrade.sh" "Running 'after-upgrade' script"
 	((TASKS -= 1000))
 fi
 
