@@ -82,6 +82,11 @@ function extractupgradefiles() {
 		echo "Error extracting files from ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
 		exit 1
 	fi
+    # Do rename to avoid rebooting twice in RESCUE
+    [ -f /boot/boot/firmware.update ] && mv /boot/boot/firmware.update /boot/boot/firmware
+    [ -f /boot/boot/modules.update ] && mv /boot/boot/modules.update /boot/boot/modules
+    [ -f /boot/boot/reglinux.update ] && mv /boot/boot/reglinux.update /boot/boot/reglinux
+    [ -f /boot/boot/rescue.update ] && mv /boot/boot/rescue.update /boot/boot/rescue
 }
 
 plymouth_output 5 "Creating list of tasks"
