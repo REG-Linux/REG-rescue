@@ -208,6 +208,9 @@ if [ "$TASKS" -ge 10 ]; then
 	"exfat")
 		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.exfat -n SHARE ${SHAREPART}" "Formatting to exfat"
 		;;
+	"ntfs")
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "mkfs.ntfs -f -L SHARE ${SHAREPART}" "Formatting to ntfs"
+		;;
 	*)
 		echo "Invalid file system type: $FORMAT_INTERNAL_TYPE" >>"$LOG"
 		display_error
