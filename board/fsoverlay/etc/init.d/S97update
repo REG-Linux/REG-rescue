@@ -51,17 +51,6 @@ function cmdoutput() {
 	return $ret
 }
 
-function mountshareinternal() {
-	SHAREMOUNT="/tmp/SHARE_INTERNAL"
-	mkdir -p "$SHAREMOUNT"
-	PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
-	echo "cmd: system-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
-	if ! system-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
-		echo "Error mounting SHARE partition!" >>"$LOG"
-		display_error
-	fi
-}
-
 # Remove the trigger(s)
 function remove_trigger() {
 	local trigger="$1"
@@ -91,28 +80,28 @@ function extractupgradefiles() {
 
 plymouth_output 5 "Creating list of tasks"
 
-TOTALSTEPS=0  # To help with progress bar
-CURRENTSTEP=0 # use multiples of 100 (100, 200, 300, etc., instead of 1, 2, 3, etc.)
-TASKS=0       # 1111
-# ^^^^
-# ||||_ Resize (expand) share_internal partition
-# |||__ Format share_internal partition
-# ||___ Change UUID of boot partition
-# |____ Finish upgrade
+TOTALSTEPS=0    # To help with progress bar
+CURRENTSTEP=0   # use multiples of 100 (100, 200, 300, etc., instead of 1, 2, 3, etc.)
+TASKS=0         # 1111
+                # ^^^^
+                # ||||_ Change UUID of boot partition
+                # |||__ Resize (expand) share_internal partition
+                # ||___ Format share_internal partition
+                # |____ Finish upgrade
+
+if grep -qE '^[ ]*newbootuuid[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
+	((TOTALSTEPS += 4))
+	((TASKS += 1))
+fi
 
 if grep -qE '^[ ]*autoresize[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
 	((TOTALSTEPS += 10))
-	((TASKS += 1))
+	((TASKS += 10))
 fi
 
 FORMAT_INTERNAL_TYPE=$(grep -m 1 -E '^[ ]*format-internal[ ]*=.*$' "${BOOTCONF}" | sed -e "s+^[ ]*format-internal[ ]*=[ ]*\(.*\)[ ]*$+\1+")
 if [ -n "$FORMAT_INTERNAL_TYPE" ]; then
 	((TOTALSTEPS += 6))
-	((TASKS += 10))
-fi
-
-if grep -qE '^[ ]*newbootuuid[ ]*=[ ]*true[ ]*$' "${BOOTCONF}"; then
-	((TOTALSTEPS += 4))
 	((TASKS += 100))
 fi
 
@@ -120,15 +109,23 @@ fi
 SHAREPART=$(system-part share_internal)
 SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
 # Mount share_internal if not yet mounted
-[ -z "$SHAREMOUNT" ] && mountshareinternal
-
-# Search for upgrade file to finish upgrading REG-linux
-board=$(cat /boot/boot/system.board)
-if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
-	((TOTALSTEPS += 7))
-	((TASKS += 1000))
+if [ -z "$SHAREMOUNT" ]; then
+	SHAREMOUNT="/tmp/SHARE_INTERNAL"
+	mkdir -p "$SHAREMOUNT"
+	PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
+	echo "cmd: system-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
+	if ! system-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
+		SHAREMOUNT=""
+	fi
 fi
-
+if [ -n "$SHAREMOUNT" ]; then
+    # Search for upgrade file to finish upgrading REG-linux
+    board=$(cat /boot/boot/system.board)
+    if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
+        ((TOTALSTEPS += 7))
+        ((TASKS += 1000))
+    fi
+fi
 ### Tasks list done.
 [ "$TASKS" -eq 0 ] && exit 0 # Greater than 0 if there is something to do
 
@@ -166,34 +163,8 @@ if [ "$TASKS" -ge 1000 ]; then
 	((TASKS -= 1000))
 fi
 
-# only when random UUID for boot partition is wanted (usually first boot only)
-if [ "$TASKS" -ge 100 ]; then
-
-	BOOTPART="$(/usr/bin/system-part boot)"
-
-	echo "Changing UUID of boot partition to a new random UUID" >>"$LOG"
-	((CURRENTSTEP += 50))
-	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "fatlabel -i -r $BOOTPART" "Changing boot partition UUID"
-	NEWUUID=$(blkid -c /dev/null -o value -s UUID "$BOOTPART")
-	echo "New UUID: $NEWUUID" >>"$LOG"
-
-	((CURRENTSTEP += 100))
-	if [ -n "$NEWUUID" ]; then
-		echo "Updating boot files with new UUID" >>"$LOG"
-		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "replaceuuid" "Updating boot files with new UUID"
-	else
-		echo "Error getting UUID of boot partition" >>"$LOG"
-		display_error
-	fi
-
-	# remove the trigger
-	((TASKS -= 100))
-	((CURRENTSTEP += 200))
-	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger newbootuuid" "Removing trigger"
-fi
-
 # format internal share if wanted
-if [ "$TASKS" -ge 10 ]; then
+if [ "$TASKS" -ge 100 ]; then
 
 	# umount share_internal
 	umount -A "$SHAREPART"
@@ -217,13 +188,13 @@ if [ "$TASKS" -ge 10 ]; then
 		;;
 	esac
 	# remove the trigger
-	((TASKS -= 10))
+	((TASKS -= 100))
 	((CURRENTSTEP += 350))
 	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger format-internal" "Removing trigger"
 fi
 
 # only when resizing of share_internal is wanted (usually first boot only)
-if [ "$TASKS" -ge 1 ]; then
+if [ "$TASKS" -ge 10 ]; then
 
 	# /userdata partition
 	PARTNUM=$(system-part "share_internal_num")
@@ -278,8 +249,34 @@ if [ "$TASKS" -ge 1 ]; then
 		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "e2fsck -f -p ${SHAREPART}" "Checking ext4 file system"
 	fi
 	# remove the trigger
+	((TASKS -= 10))
 	((CURRENTSTEP += 100))
 	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger autoresize" "Removing trigger"
+fi
+
+# only when random UUID for boot partition is wanted (usually first boot only)
+if [ "$TASKS" -ge 1 ]; then
+
+	BOOTPART="$(/usr/bin/system-part boot)"
+
+	echo "Changing UUID of boot partition to a new random UUID" >>"$LOG"
+	((CURRENTSTEP += 50))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "fatlabel -i -r $BOOTPART" "Changing boot partition UUID"
+	NEWUUID=$(blkid -c /dev/null -o value -s UUID "$BOOTPART")
+	echo "New UUID: $NEWUUID" >>"$LOG"
+
+	((CURRENTSTEP += 100))
+	if [ -n "$NEWUUID" ]; then
+		echo "Updating boot files with new UUID" >>"$LOG"
+		cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "replaceuuid" "Updating boot files with new UUID"
+	else
+		echo "Error getting UUID of boot partition" >>"$LOG"
+		display_error
+	fi
+
+	# remove the trigger
+	((CURRENTSTEP += 200))
+	cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "remove_trigger newbootuuid" "Removing trigger"
 fi
 
 # finally disk sync
@@ -291,5 +288,5 @@ mount -o remount,ro /boot || true
 
 #Cleanup, restore screen, set progress of last item to 100%
 plymouth_output 100 "Finished... Rebooting..."
-
+sleep 2
 exit 0
