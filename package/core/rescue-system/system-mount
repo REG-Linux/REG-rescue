@@ -18,14 +18,12 @@ TESTFILE="${MOUNTPOINT}/reglinux.fsrw.test"
 do_mount() {
     case "${FSTYPE}" in
         ntfs)
-            if test -e "/sbin/mount.ntfs-3g"; then
-                modprobe fuse
-                if ! /sbin/mount.ntfs-3g "${MOUNTDEVICE}" "${MOUNTPOINT}" -o "${FSMOUNTOPT}"; then
+            if modprobe ntfs3; then
+                if ! mount -t ntfs3 "${MOUNTDEVICE}" "${MOUNTPOINT}" -o "${FSMOUNTOPT}"; then
                     exit 1
                 fi
             else
-                modprobe ntfs3
-                if ! mount -t ntfs3 "${MOUNTDEVICE}" "${MOUNTPOINT}" -o "${FSMOUNTOPT}"; then
+                if ! modprobe fuse || ! mount -t ntfs-3g "${MOUNTDEVICE}" "${MOUNTPOINT}" -o "${FSMOUNTOPT}"; then
                     exit 1
                 fi
             fi
