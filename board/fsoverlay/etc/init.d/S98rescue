@@ -7,7 +7,7 @@ start)
         rm -f /boot/REG_RESCUE
         /usr/bin/plymouth --wait quit
     else
-        reboot
+        shutdown -r now
     fi
     ;;
 stop)
