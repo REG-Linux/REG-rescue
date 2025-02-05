@@ -26,6 +26,8 @@ jobs:
       - name: Init buildroot
         shell: bash
         run: |
+          apt-get update
+          apt-get install -y curl jq
           cd ..
           rm -rf ./REG-rescue
           git clone --branch main "https://${GITHUB_REPOSITORY_OWNER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ./REG-rescue
