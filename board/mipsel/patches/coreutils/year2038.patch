@@ -1,0 +1,20 @@
+--- a/configure
++++ b/configure
+@@ -652,7 +652,7 @@
+ gl_getopt_required=POSIX
+ ac_c_werror_flag=
+ gt_needs=
+-enable_year2038=yes
++enable_year2038=no
+ ac_subst_vars='gltests_LIBOBJDEPS
+ gltests_LTLIBOBJS
+ gltests_LIBOBJS
+@@ -8950,7 +8950,7 @@
+ { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_sys_year2038_opts" >&5
+ printf "%s\n" "$ac_cv_sys_year2038_opts" >&6; }
+ 
+-ac_have_year2038=yes
++ac_have_year2038=no
+ case $ac_cv_sys_year2038_opts in #(
+   "none needed") :
+      ;; #(

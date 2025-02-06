@@ -42,8 +42,9 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 aarch64)" || ${{ true }}
-          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-aarch64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
+          if curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 aarch64)"; then
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-aarch64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0 || rm -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-aarch64-*
+          fi
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-aarch64
           make O=/__w/REG-rescue/REG-rescue/output/aarch64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-aarch64_defconfig
           cd /__w/REG-rescue/REG-rescue/output/aarch64
@@ -55,8 +56,9 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armhf)" || ${{ true }}
-          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armhf-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
+          if curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armhf)"; then
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armhf-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0 || rm -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armhf-*
+          fi
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-armhf
           make O=/__w/REG-rescue/REG-rescue/output/armhf BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-armhf_defconfig
           cd /__w/REG-rescue/REG-rescue/output/armhf
@@ -68,8 +70,9 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armv7)" || ${{ true }}
-          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armv7-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
+          if curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 armv7)"; then
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armv7-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0 || rm -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-armv7-*
+          fi
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-armv7
           make O=/__w/REG-rescue/REG-rescue/output/armv7 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-armv7_defconfig
           cd /__w/REG-rescue/REG-rescue/output/armv7
@@ -81,8 +84,9 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 mipsel)" || ${{ true }}
-          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-mipsel-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
+          if curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 mipsel)"; then
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-mipsel-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0 || rm -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-mipsel-*
+          fi
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-mipsel
           make O=/__w/REG-rescue/REG-rescue/output/mipsel BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-mipsel_defconfig
           cd /__w/REG-rescue/REG-rescue/output/mipsel
@@ -94,8 +98,9 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 riscv64)" || ${{ true }}
-          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-riscv64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
+          if curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 riscv64)"; then
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-riscv64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0 || rm -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-riscv64-*
+          fi
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-riscv64
           make O=/__w/REG-rescue/REG-rescue/output/riscv64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-riscv64_defconfig
           cd /__w/REG-rescue/REG-rescue/output/riscv64
@@ -107,8 +112,9 @@ jobs:
         if: ${{ ! cancelled() }}
         shell: bash
         run: |
-          curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 x86_64)" || ${{ true }}
-          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-x86_64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0
+          if curl -sfLO --output-dir "/__w/REG-rescue/REG-linux-rescue-COMPILED" "$(curl --silent "https://api.github.com/repos/REG-Linux/REG-rescue/releases/latest" | jq -r '.assets[] | "\(.browser_download_url)"' | sort | grep -m1 x86_64)"; then
+          [[ -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-x86_64-${{ env.RESCUEVERSION }}-${{ env.SUFFIXDATE }} ]] && exit 0 || rm -f /__w/REG-rescue/REG-linux-rescue-COMPILED/REG-linux-rescue-x86_64-*
+          fi
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-x86_64
           make O=/__w/REG-rescue/REG-rescue/output/x86_64 BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-x86_64_defconfig
           cd /__w/REG-rescue/REG-rescue/output/x86_64
