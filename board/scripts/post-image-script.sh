@@ -8,8 +8,6 @@
 # TARGET_DIR = target dir
 
 RESCUE_TARGET=$(grep -E "^BR2_PACKAGE_RESCUE_TARGET_[A-Z_0-9]*=y$" "${BR2_CONFIG}" | sed -e s+'^BR2_PACKAGE_RESCUE_TARGET_\([A-Z_0-9]*\)=y$'+'\1'+)
-SUFFIXVERSION=$(cat "${TARGET_DIR}/usr/share/reglinux/system.version" | sed -e s+'^\([0-9\.]*\).*$'+'\1'+) # xx.yy version
-SUFFIXDATE=$(date +%Y%m%d)
 
 # final filename
 RESCUEIMG="${BINARIES_DIR}/REG-linux-rescue-${RESCUE_TARGET,,}"
@@ -21,4 +19,4 @@ if [ -f "${RESCUEIMG}" ]; then
 fi
 
 # rename rootfs.squashfs to rescue
-mv "${BINARIES_DIR}/rootfs.squashfs" "${BINARIES_DIR}/REG-linux-rescue-${RESCUE_TARGET,,}-${SUFFIXVERSION}-${SUFFIXDATE}"
+mv "${BINARIES_DIR}/rootfs.squashfs" "${RESCUEIMG}"
