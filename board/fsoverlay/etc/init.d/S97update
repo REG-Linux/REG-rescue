@@ -106,26 +106,30 @@ if [ -n "$FORMAT_INTERNAL_TYPE" ]; then
 fi
 
 # Search for share_internal mount point
-SHAREPART=$(system-part share_internal)
-SHAREMOUNT=$(grep -m 1 -E "^$SHAREPART " /proc/mounts | awk '{print $2}')
-# Mount share_internal if not yet mounted
-if [ -z "$SHAREMOUNT" ]; then
-    SHAREMOUNT="/tmp/SHARE_INTERNAL"
-    mkdir -p "$SHAREMOUNT"
-    PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
-    echo "cmd: system-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
-    if ! system-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
-        SHAREMOUNT=""
+SHAREPART=$(/usr/bin/system-part share_internal)
+if [ -n "$SHAREPART" ]; then
+    # get the last mount point
+    SHAREMOUNT=$(sed -n -e '\|^'"${SHAREPART}"' |h;g;$!d;s|^'"${SHAREPART}"' \([^ ]*\) .*|\1|p' /proc/mounts)
+    # Mount share_internal if not yet mounted
+    if [ -z "$SHAREMOUNT" ]; then
+        SHAREMOUNT="/tmp/SHARE_INTERNAL"
+        mkdir -p "$SHAREMOUNT"
+        PARTTYPE=$(blkid -o value -s TYPE "$SHAREPART")
+        echo "cmd: /usr/bin/system-mount \"${PARTTYPE}\" 1 \"$SHAREPART\" \"$SHAREMOUNT\"" >>"$LOG"
+        if ! /usr/bin/system-mount "${PARTTYPE}" 1 "$SHAREPART" "$SHAREMOUNT" >>"$LOG" 2>&1; then
+            SHAREMOUNT=""
+        fi
+    fi
+    if [ -n "$SHAREMOUNT" ]; then
+        # Search for upgrade file to finish upgrading REG-linux
+        board=$(cat /boot/boot/system.board)
+        if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
+            ((TOTALSTEPS += 7))
+            ((TASKS += 1000))
+        fi
     fi
 fi
-if [ -n "$SHAREMOUNT" ]; then
-    # Search for upgrade file to finish upgrading REG-linux
-    board=$(cat /boot/boot/system.board)
-    if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
-        ((TOTALSTEPS += 7))
-        ((TASKS += 1000))
-    fi
-fi
+
 ### Tasks list done.
 [ "$TASKS" -eq 0 ] && exit 0 # Greater than 0 if there is something to do
 
@@ -165,17 +169,34 @@ fi
 
 # format internal share if wanted
 if [ "$TASKS" -ge 100 ]; then
-
+    # A previous failed format could leave SHARE partition unusable
+    if [ -z "$SHAREPART" ]; then
+        # If there is a partition in boot disk with NO LABEL and NO FILESYSTEM asume it was SHARE
+        DISK=$(/usr/bin/system-part boot); DISK=$(/usr/bin/system-part prefix "$DISK")
+        while read -r PARTITIONS; do
+            if [ "$(lsblk -no FSTYPE,LABEL "$PARTITIONS")" = " " ]; then
+                SHAREPART="$PARTITIONS"
+                break
+            fi
+        done < <(find /dev/ \( -wholename "${DISK}?" \) -or \( -wholename "${DISK}p?" \))
+        if [ -z "$SHAREPART" ]; then
+            echo "Could not find SHARE partition!" >>"$LOG"
+            display_error
+        fi
+    fi
+    echo "SHARE partition is $SHAREPART" >>"$LOG"
     # umount share_internal
     n=0
-    while [ $n -lt 6 ] && grep -m 1 -E  "^$SHAREPART " /proc/mounts; do
+    until ! grep -m 1 -E  "^$SHAREPART " /proc/mounts; do
+        if [ "$n" -gt 6 ]; then
+            echo "Could not umount $SHAREPART" >>"$LOG"
+            display_error
+        fi
+        ((n++))
         umount -A "$SHAREPART"
         sleep 1
-        ((n++))
     done
-    if grep -m 1 -E "^$SHAREPART " /proc/mounts; then
-        display_error
-    fi
+
     ((CURRENTSTEP += 200))
     case "$FORMAT_INTERNAL_TYPE" in
     "btrfs")
@@ -206,11 +227,11 @@ fi
 if [ "$TASKS" -ge 10 ]; then
 
     # /userdata partition
-    PARTNUM=$(system-part "share_internal_num")
+    PARTNUM=$(/usr/bin/system-part "share_internal_num")
     echo "Partition name: $SHAREPART & number: $PARTNUM" >>"$LOG"
 
     # boot disk
-    DISK=$(system-part prefix "${SHAREPART}")
+    DISK=$(/usr/bin/system-part prefix "${SHAREPART}")
     echo "Disk = $DISK" >>"$LOG"
 
     # only for ext4
