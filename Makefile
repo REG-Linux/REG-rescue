@@ -1,21 +1,30 @@
-PROJECT_DIR    := $(shell pwd)
-DL_DIR         ?= $(PROJECT_DIR)/dl
-OUTPUT_DIR     ?= $(PROJECT_DIR)/output
-CCACHE_DIR     ?= $(PROJECT_DIR)/buildroot-ccache
-LOCAL_MK       ?= $(PROJECT_DIR)/rescue.mk
-EXTRA_PKGS     ?=
-DOCKER_OPTS    ?=
-MAKE_JLEVEL    ?= $(shell nproc)
-BATCH_MODE     ?=
-PARALLEL_BUILD ?= y
-DOCKER         ?= docker
+PROJECT_DIR	:= $(shell pwd)
+DL_DIR		?= $(PROJECT_DIR)/dl
+OUTPUT_DIR	?= $(PROJECT_DIR)/output
+CCACHE_DIR	?= $(PROJECT_DIR)/buildroot-ccache
+LOCAL_MK	?= $(PROJECT_DIR)/rescue.mk
+EXTRA_OPTS	?=
+DOCKER_OPTS	?=
+NPROC		:= $(shell nproc)
+MAKE_JLEVEL	?= $(NPROC)
+MAKE_LLEVEL	?= $(shell echo $$(($(NPROC) * 1)))
+BATCH_MODE	?=
+PARALLEL_BUILD	?= y
+DEBUG_BUILD	?=
+DOCKER		?= docker
 
 -include $(LOCAL_MK)
 
 ifdef PARALLEL_BUILD
 	EXTRA_OPTS +=  BR2_PER_PACKAGE_DIRECTORIES=y
-	MAKE_OPTS  += -j$(MAKE_JLEVEL)
 endif
+
+ifdef DEBUG_BUILD
+	EXTRA_OPTS +=  BR2_ENABLE_DEBUG=y
+endif
+
+MAKE_OPTS  += -j$(MAKE_JLEVEL)
+MAKE_OPTS  += -l$(MAKE_LLEVEL)
 
 ifndef BATCH_MODE
 	DOCKER_OPTS += -i
@@ -51,7 +60,7 @@ build-docker-image:
 	@$(DOCKER) pull $(DOCKER_REPO)/$(IMAGE_NAME)
 	@touch .ba-docker-image-available
 
-reglinux-docker-image: .ba-docker-image-available
+reglinux-docker-image: merge .ba-docker-image-available
 
 update-docker-image:
 	-@rm .ba-docker-image-available > /dev/null
@@ -218,3 +227,9 @@ remove-dl-dups:
 	@while [ -n "`find $(DL_DIR) -maxdepth 2 -type f -name "*.zip" -o -name "*.tar.*" -printf '%T@ %p %f\n' | sed -r 's:\-[0-9a-f\.]+(\.zip|\.tar\.[2a-z]+)$$::' | sort -k3 -k1 | uniq -f 2 -d | cut -d' ' -f2 | grep .`" ] ; do \
 		find $(DL_DIR) -maxdepth 2 -type f -name "*.zip" -o -name "*.tar.*" -printf '%T@ %p %f\n' | sed -r 's:\-[0-9a-f\.]+(\.zip|\.tar\.[2a-z]+)$$::' | sort -k3 -k1 | uniq -f 2 -d | cut -d' ' -f2 | xargs rm -rf ; \
 	done
+
+merge:
+	CUSTOM_DIR=$(PWD)/custom BUILDROOT_DIR=$(PWD)/buildroot $(PWD)/scripts/mergeToBR.sh
+
+generate:
+	CUSTOM_DIR=$(PWD)/custom BUILDROOT_DIR=$(PWD)/buildroot $(PWD)/scripts/generateCustom.sh
