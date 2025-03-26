@@ -1,0 +1,27 @@
+# This is the list of patches to apply to the Buildroot external tree
+# First column is either:
+#   * a MD5 sum of the file to patch (i.e. the target file)
+#   * a line of minus signs ('-') indicates a file that we remove from Buildroot external tree
+#   * a line of plus signs ('+') indicates a file that we add to the Buildroot external tree
+
+13c7f1897975ae6d698aa3eda525d125  fs/cpio/dracut.conf
+68b27177f9fe560b74f0c9e4c4fd53e1  fs/cpio/init
+0f1e375992de585df0580c9ef85158e8  fs/squashfs/Config.in
+8635723306eb367f07b3b8fc57243880  fs/squashfs/squashfs.mk
+7d250d3076d1f4e49ca0536684449e2a  package/libdrm/libdrm.mk
+ad422751e4a60689e4198ccf4441ae25  package/ncurses/ncurses.mk
+4aec3b9512408660528c3c04a1b76221  package/ntfs-3g/ntfs-3g.mk
+7e501d1ce57a81b643283e62111b8c91  package/pcre2/Config.in
+837f387642582c0188c5f6e48d6d2f57  package/usbmount/usbmount.mk
+9386acb2ab06c301db37072525bf5f13  package/util-linux/util-linux.mk
+984c2366b004c95b2b51b885d6f691ed  package/x11r7/libxcb/libxcb.hash
+428934c4770f1f2e48e755919bed5b3b  package/x11r7/libxcb/libxcb.mk
+734e7126c81bb9b266e3ca5922ebac41  package/x11r7/xapp_xeyes/xapp_xeyes.hash
+b505bd86bf1afada46592953264e4b21  package/x11r7/xapp_xeyes/xapp_xeyes.mk
+534d71607ebcdb5091242c5fa68d3e8c  package/x11r7/xcb-proto/xcb-proto.hash
+6e262d9fcc1cf3cf23793da7766b7e7d  package/x11r7/xcb-proto/xcb-proto.mk
+db0964edb3e4a6bfe8199b31ecc986b7  package/x11r7/xcb-util-cursor/xcb-util-cursor.hash
+09bf024358ebc572b49165b564febee4  package/x11r7/xcb-util-cursor/xcb-util-cursor.mk
+15e40a5bf313229ce01dfd106e310711  support/scripts/apply-patches.sh
+46e6790ab639d76ca7ca370a12c9ec82  support/scripts/check-bin-arch
+fd68073de549caae030699682bc09c95  support/scripts/mkusers
