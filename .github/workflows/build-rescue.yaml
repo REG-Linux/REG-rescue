@@ -47,6 +47,7 @@ jobs:
           echo "rescueversion=${rescueversion}" >> "$GITHUB_OUTPUT"
           sufixdate=$(date +%Y%m%d)
           echo "sufixdate=${sufixdate}" >> "$GITHUB_OUTPUT"
+          /__w/REG-rescue/REG-rescue/scripts/mergeToBR.sh
           /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-${{ matrix.platform }}
           CCACHE_DISABLE=1 make O=/__w/REG-rescue/REG-rescue/output/${{ matrix.platform }} BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-${{ matrix.platform }}_defconfig
           cd /__w/REG-rescue/REG-rescue/output/${{ matrix.platform }}
