@@ -4,10 +4,9 @@
 #   * a line of minus signs ('-') indicates a file that we remove from Buildroot external tree
 #   * a line of plus signs ('+') indicates a file that we add to the Buildroot external tree
 
-13c7f1897975ae6d698aa3eda525d125  fs/cpio/dracut.conf
-68b27177f9fe560b74f0c9e4c4fd53e1  fs/cpio/init
 0f1e375992de585df0580c9ef85158e8  fs/squashfs/Config.in
 8635723306eb367f07b3b8fc57243880  fs/squashfs/squashfs.mk
+46657d0c66d1a81d822a9d9869c15597  package/acpid/acpid.mk
 7d250d3076d1f4e49ca0536684449e2a  package/libdrm/libdrm.mk
 ad422751e4a60689e4198ccf4441ae25  package/ncurses/ncurses.mk
 4aec3b9512408660528c3c04a1b76221  package/ntfs-3g/ntfs-3g.mk
