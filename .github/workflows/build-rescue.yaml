@@ -32,49 +32,54 @@ jobs:
     strategy:
       matrix:
         platform: [aarch64, armhf, armv7, mipsel, riscv64, x86_64]
+      fail-fast: false
     steps:
       - name: compile-${{ matrix.platform }}
         id: compile_step
         shell: bash
         run: |
+          foldername=${PWD##*/}
           cd ..
-          rm -rf ./REG-rescue
-          git clone --branch main "https://${GITHUB_REPOSITORY_OWNER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ./REG-rescue
-          cd REG-rescue
+          rm -rf "${foldername}"
+          git clone --branch main "https://${GITHUB_REPOSITORY_OWNER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "./${foldername}"
+          cd "${foldername}"
           git submodule init
           git submodule update
-          rescueversion=$(grep -m 1 RESCUE_SYSTEM_VERSION /__w/REG-rescue/REG-rescue/package/core/rescue-system/rescue-system.mk | sed -e "s/.*=[ ]*//")
+          rm -rf .git .github buildroot/.github buildroot/.gitlab
+          
+          rescueversion=$(grep -m 1 RESCUE_SYSTEM_VERSION "${GITHUB_WORKSPACE}/package/core/rescue-system/rescue-system.mk" | sed -e "s/.*=[ ]*//")
           echo "rescueversion=${rescueversion}" >> "$GITHUB_OUTPUT"
           sufixdate=$(date +%Y%m%d)
           echo "sufixdate=${sufixdate}" >> "$GITHUB_OUTPUT"
-          /__w/REG-rescue/REG-rescue/scripts/mergeToBR.sh
-          /__w/REG-rescue/REG-rescue/configs/createDefconfig.sh /__w/REG-rescue/REG-rescue/configs/rescue-${{ matrix.platform }}
-          CCACHE_DISABLE=1 make O=/__w/REG-rescue/REG-rescue/output/${{ matrix.platform }} BR2_EXTERNAL=/__w/REG-rescue/REG-rescue -C /__w/REG-rescue/REG-rescue/buildroot rescue-${{ matrix.platform }}_defconfig
-          cd /__w/REG-rescue/REG-rescue/output/${{ matrix.platform }}
-          CCACHE_DISABLE=1 make
-          mkdir -p /__w/REG-rescue/REG-rescue-COMPILED
-          find "/__w/REG-rescue/REG-rescue/output/${{ matrix.platform }}/images/" -type f -name 'REG-linux-rescue*' -exec mv "{}" "/__w/REG-rescue/REG-rescue-COMPILED/REG-linux-rescue-${{ matrix.platform }}-${rescueversion}-${sufixdate}" \; -exec echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT" \;
+          
+          "${GITHUB_WORKSPACE}/scripts/mergeToBR.sh"
+          "${GITHUB_WORKSPACE}/configs/createDefconfig.sh" "${GITHUB_WORKSPACE}/configs/rescue-${{ matrix.platform }}"
+          CCACHE_DISABLE=1 make BR2_EXTERNAL="${GITHUB_WORKSPACE}" -C "${GITHUB_WORKSPACE}/buildroot" rescue-${{ matrix.platform }}_defconfig
+          CCACHE_DISABLE=1 make -j$(nproc) BR2_EXTERNAL="${GITHUB_WORKSPACE}" -C "${GITHUB_WORKSPACE}/buildroot"
+          
+          mkdir -p ${GITHUB_WORKSPACE}/REG-rescue-COMPILED
+          find "${GITHUB_WORKSPACE}/buildroot/output/images/" -type f -name 'REG-linux-rescue*' -exec mv "{}" "${GITHUB_WORKSPACE}/REG-rescue-COMPILED/REG-linux-rescue-${{ matrix.platform }}-${rescueversion}-${sufixdate}" \; -exec echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT" \;
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
         uses: actions/upload-artifact@v4
         with:
           name: REG-linux-rescue-${{ matrix.platform }}-${{ steps.compile_step.outputs.rescueversion }}-${{ steps.compile_step.outputs.sufixdate }}
-          path: /__w/REG-rescue/REG-rescue-COMPILED/
+          path: REG-rescue-COMPILED/
   create_release:
     name: Create release
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ needs.build.outputs.dorelease && ! cancelled() }}
+    if: ${{ needs.build.outputs.dorelease }}
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./REG-rescue-COMPILED/
+          path: REG-rescue-COMPILED/
           merge-multiple: true
       - name: Create release
         uses: softprops/action-gh-release@master
         with:
-          files: ./REG-rescue-COMPILED/**/REG-linux-rescue-*
+          files: REG-rescue-COMPILED/REG-linux-rescue-*
           tag_name: ${{ needs.build.outputs.rescueversion }}
           prerelease: true
           generate_release_notes: true
