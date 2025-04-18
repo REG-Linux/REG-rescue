@@ -5,17 +5,23 @@ if [ "$1" != "start" ] || [ ! -f /boot/REG_UPDATE ]; then
     exit 0
 fi
 
-# Move REG_UPDATE to /tmp to not loop rescue mode
-mount -o remount,rw /boot
-mv /boot/REG_UPDATE /tmp/
-# Don't remount ro yet
-
 BOOTCONF="/boot/system-boot.conf"
 LOG="/tmp/rescue.log"
+
+# Move REG_UPDATE to /tmp to not loop rescue mode
+if mount -o remount,rw /boot >>"$LOG" 2>&1; then
+    rm /boot/REG_UPDATE
+else
+    echo "could no mount /boot in writeable mode!" >>"$LOG"
+    touch /tmp/REG_RESCUE
+    exit 1
+fi
+# Don't remount ro yet
 
 # Display error with timeout
 function display_error() {
     /usr/bin/plymouth display-message --text="ERROR! Please check the log at: /boot/rescue.log"
+    sleep 5
     cp --backup=simple "$LOG" /boot/
     touch /boot/REG_RESCUE
     exit 1
@@ -61,21 +67,86 @@ function remove_trigger() {
 function replaceuuid() {
     # First try to replace label=REGLINUX with uuid=*, just in case we are updating a very old disk
     find "/boot/" -type f \( -iname "LinuxLoader.cfg" -o -iname "extlinux.conf" -o -iname "cmdline.txt" -o -iname "boot.ini" -o -iname "uEnv.txt" -o -iname "syslinux.cfg" -o -iname "grub.cfg" \) -exec sed -i "s/label=REGLINUX/uuid=${NEWUUID}/g;s/uuid=[a-fA-F0-9-]*/uuid=${NEWUUID}/g" {} \+
+    if [ -f /boot/boot.scr ] && [ -f /boot/rebuild-boot-script.sh ]; then
+        bash /boot/rebuild-boot-script.sh
+    fi
 }
 
 function extractupgradefiles() {
-    # Exclude system-boot.conf to avoid losing user settings and restoring triggers
-    # Also exclude files already updated
-    # tar --no-same-owner is needed because fat partition does not support owner attributes
-    if ! tar -C /boot/ --no-same-owner --exclude='system-boot.conf' --exclude='config.txt' --exclude='runbeforeupgrade.sh' --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"; then
-        echo "Error extracting files from ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst"
-        exit 1
+    # First check if rescue was already upgraded
+    # should have, if using system-upgrade, but not if manually placing upgrade file in /userdata/system/upgrade/
+    if [ -f /boot/upgrade.list ]; then
+        # Try to free some space before extracting
+        while read -r line || [ -n "$line" ]; do
+            rm -f "/boot/${line%.update}"
+        done < /boot/upgrade.list
+
+        ((CURRENTSTEP += 50))
+        plymouth_output  $((CURRENTSTEP / TOTALSTEPS)) "Extracting files to upgrade REG-linux OS"
+        if tar --zstd -C /boot/ --no-same-owner -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" --verbatim-files-from -T /boot/upgrade.list; then
+            echo "Deleting /boot/upgrade.list"
+            rm /boot/upgrade.list || display_error
+        else
+            echo "Error extracting upgrade files"
+            display_error
+        fi
+    else
+        # Upgrade rescue (first stage)
+        if tar --zstd --exclude='system-boot.conf' --exclude='config.txt' -tf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" > /tmp/upgrade.list && sed -i '\%/$%d' /tmp/upgrade.list && grep -qh '^' /tmp/upgrade.list; then
+            # /tmp/upgrade.list has one file per line and we deleted lines with only folders
+            if grep -q -m 1 'runbeforeupgrade.sh' /tmp/upgrade.list; then
+                ((CURRENTSTEP += 50))
+                plymouth_output  $((CURRENTSTEP / TOTALSTEPS)) "Running /tmp/runbeforeupgrade.sh"
+                if tar -C /tmp/ --no-same-owner --zstd -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" runbeforeupgrade.sh &>/dev/null; then
+                    . /tmp/runbeforeupgrade.sh
+                    sed -i '/runbeforeupgrade.sh/d' /tmp/upgrade.list
+                else
+                    echo "Error extracting file: runbeforeupgrade.sh"
+                    display_error
+                fi
+            fi
+
+            rescuelist=''
+            while read -r line || [ -n "$line" ]; do
+                rescuelist="${rescuelist} ${line}"
+                sed -i "\%${line}%d" /tmp/upgrade.list
+                [ "${line}" = "boot/firmware.update" ] && umount /lib/firmware
+                rm -f "/boot/${line%.update}"       # Try to free some space before extracting
+            done < <(grep -E 'boot/firmware.update|boot/initrd.lz4|boot/linux|boot/modules.update|boot/rescue.update' /tmp/upgrade.list)
+
+            ((CURRENTSTEP += 50))
+            plymouth_output  $((CURRENTSTEP / TOTALSTEPS)) "Extracting files to upgrade rescue"
+
+            if tar --zstd -C /boot/ --no-same-owner -xf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ${rescuelist}; then
+                ((CURRENTSTEP += 100))
+                plymouth_output  $((CURRENTSTEP / TOTALSTEPS)) "Upgrade will resume after reboot..."
+                if mv /tmp/upgrade.list /boot/upgrade.list; then
+                    touch /boot/REG_UPDATE
+                    sync
+                    mount -o remount,ro /boot
+                    sleep 2
+                    shutdown -r now
+                    exit 0
+                else
+                    echo "Error copying upgrade.list for second stage of reboot"
+                    display_error
+                fi
+            else
+                echo "Error extracting rescue files"
+                display_error
+            fi
+        else
+            echo "Error extracting rescue files"
+            display_error
+        fi
     fi
-    # Do rename to avoid rebooting twice in RESCUE
+
+    ((CURRENTSTEP += 100))
+    plymouth_output  $((CURRENTSTEP / TOTALSTEPS)) "Finishing upgrading REG-linux OS"
+    # Do rename to avoid rebooting again in UPDATE mode
     [ -f /boot/boot/firmware.update ] && mv /boot/boot/firmware.update /boot/boot/firmware
     [ -f /boot/boot/modules.update ] && mv /boot/boot/modules.update /boot/boot/modules
     [ -f /boot/boot/reglinux.update ] && mv /boot/boot/reglinux.update /boot/boot/reglinux
-    [ -f /boot/boot/rescue.update ] && mv /boot/boot/rescue.update /boot/boot/rescue
 }
 
 plymouth_output 5 "Creating list of tasks"
@@ -121,7 +192,7 @@ if [ -n "$SHAREPART" ]; then
         fi
     fi
     if [ -n "$SHAREMOUNT" ]; then
-        # Search for upgrade file to finish upgrading REG-linux
+        # Search for upgrade file
         board=$(cat /boot/boot/system.board)
         if [ -f "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" ]; then
             ((TOTALSTEPS += 7))
@@ -133,23 +204,16 @@ fi
 ### Tasks list done.
 [ "$TASKS" -eq 0 ] && exit 0 # Greater than 0 if there is something to do
 
-# finish upgrading REG-linux if upgrade file found
+# Upgrade REG-linux if upgrade file found
 if [ "$TASKS" -ge 1000 ]; then
 
     echo "Found update: ${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" >>"$LOG"
-
-    # First get the list of available files to see if it includes reglinux
-    if tar --zstd -tf "${SHAREMOUNT}/system/upgrade/boot-${board}.tar.zst" | grep 'boot/reglinux'; then
-        # Delete previous reglinux because we need the space
-        ((CURRENTSTEP += 50))
-        cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "rm -f /boot/boot/reglinux" "Deleting previous REG-linux OS"
-    fi
 
     ((CURRENTSTEP += 100))
     cmdoutput $((CURRENTSTEP / TOTALSTEPS)) "extractupgradefiles" "Extracting upgrade files"
 
     # Fix uuid
-    ((CURRENTSTEP += 400))
+    ((CURRENTSTEP += 250))
     BOOTPART=$(/usr/bin/system-part boot)
     NEWUUID=$(blkid -o value -s UUID "$BOOTPART")
     if [ -n "$NEWUUID" ]; then
@@ -163,7 +227,7 @@ if [ "$TASKS" -ge 1000 ]; then
 
     # Run /boot/runafterupgrade.sh if found, using current environment
     ((CURRENTSTEP += 100))
-    [ -f /boot/runafterupgrade.sh ] && cmdoutput $((CURRENTSTEP / TOTALSTEPS)) ". /boot/runafterupgrade.sh" "Running 'after-upgrade' script"
+    [ -f /boot/runafterupgrade.sh ] && cmdoutput $((CURRENTSTEP / TOTALSTEPS)) ". /boot/runafterupgrade.sh" "Running 'after-upgrade' script" && rm -f /boot/runafterupgrade.sh
     ((TASKS -= 1000))
 fi
 
@@ -173,7 +237,7 @@ if [ "$TASKS" -ge 100 ]; then
     if [ -z "$SHAREPART" ]; then
         # If there is a partition in boot disk with NO LABEL and NO FILESYSTEM asume it was SHARE
         DISK=$(/usr/bin/system-part boot); DISK=$(/usr/bin/system-part prefix "$DISK")
-        while read -r PARTITIONS; do
+        while read -r PARTITIONS || [ -n "$PARTITIONS" ]; do
             if [ "$(lsblk -no FSTYPE,LABEL "$PARTITIONS")" = " " ]; then
                 SHAREPART="$PARTITIONS"
                 break

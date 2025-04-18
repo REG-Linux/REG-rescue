@@ -2,9 +2,9 @@
 
 case "$1" in
 start)
-    if [ -f /boot/REG_RESCUE ]; then
+    if [ -f /boot/REG_RESCUE ] || [ -f /tmp/REG_RESCUE ]; then
         mount -o remount,rw /boot
-        rm -f /boot/REG_RESCUE
+        rm -f /boot/REG_RESCUE /tmp/REG_RESCUE
         /usr/bin/plymouth --wait quit
     else
         shutdown -r now
