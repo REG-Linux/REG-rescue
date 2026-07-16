@@ -67,6 +67,11 @@ BR2_PACKAGE_SQUASHFS_XZ=y
 # REGlinux splash screen
 BR2_PACKAGE_PLYMOUTH=y
 
+# USB gadget (adb/mtp), driven by system.usb.gadget* keys in /boot/system-boot.conf
+BR2_PACKAGE_UMTP_RESPONDER=y
+BR2_PACKAGE_ANDROID_TOOLS=y
+BR2_PACKAGE_ANDROID_TOOLS_ADBD=y
+
 # images
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-build-script.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_RESCUE_PATH)/board/scripts/post-image-script.sh"
