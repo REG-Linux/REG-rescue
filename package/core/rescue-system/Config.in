@@ -34,6 +34,7 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_PACKAGE_USBMOUNT			# usb key/sd card mounter
 	select BR2_PACKAGE_USBUTILS			# usb key/sd card tools
 	select BR2_PACKAGE_KBD				# loadkeys
+	select BR2_PACKAGE_BASH				# interactive root shell (dash lacks history/completion)
 
 	# Disk tool
 	select BR2_PACKAGE_PARTED			# partition management (for the first boot)
