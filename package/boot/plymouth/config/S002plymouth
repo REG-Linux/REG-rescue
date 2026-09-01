@@ -1,7 +1,15 @@
 #!/bin/sh
 case "$1" in
     start)
-        { [ -f /boot/REG_UPDATE ] && /usr/sbin/plymouthd --mode=updates --graphical-boot --attach-to-session ; } || /usr/sbin/plymouthd --mode=boot --graphical-boot --attach-to-session
+        if { [ -f /boot/REG_UPDATE ] && /usr/sbin/plymouthd --mode=updates --graphical-boot --attach-to-session ; } || /usr/sbin/plymouthd --mode=boot --graphical-boot --attach-to-session; then
+            # Stop the kernel drawing text into the framebuffer, but only once plymouthd is up, so a failed start still leaves a usable console.
+            for vtcon in /sys/class/vtconsole/vtcon*; do
+                [ -r "$vtcon/name" ] || continue
+                case "$(cat "$vtcon/name")" in
+                    *"frame buffer device"*) echo 0 > "$vtcon/bind" ;;
+                esac
+            done
+        fi
         /usr/bin/plymouth --show-splash
     ;;
     stop)

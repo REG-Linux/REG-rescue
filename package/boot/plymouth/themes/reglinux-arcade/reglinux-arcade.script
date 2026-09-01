@@ -204,61 +204,74 @@ if (notfirstrun != 1) {
 
 # ---------------------------------------------------------------------------
 # Update mode — detect mode changes without resetting animation
+#
+# Polled from refresh_callback() rather than run at top level: patch 0004 makes
+# `plymouth change-mode` retarget the running script in place, so top level no
+# longer re-executes on a mode change.
 # ---------------------------------------------------------------------------
-new_mode = Plymouth.GetMode();
+fun apply_mode_change() {
+    new_mode = Plymouth.GetMode();
 
-if (new_mode != mode) {
-    # Hide all text/UI elements from previous mode
-    rescue_mode_sprite.SetOpacity(0);
-    updating_sprite.SetOpacity(0);
-    bar_bg_sprite.SetOpacity(0);
-    bar_fg_sprite.SetOpacity(0);
-    subtitle_sprite.SetOpacity(0);
-    msg_sprite.SetOpacity(0);
-    sysreset_title_sprite.SetOpacity(0);
-    reboot_sub_sprite.SetOpacity(0);
-    shutdown_sub_sprite.SetOpacity(0);
+    if (new_mode != global.mode) {
+        # Hide all text/UI elements from previous mode
+        global.rescue_mode_sprite.SetOpacity(0);
+        global.updating_sprite.SetOpacity(0);
+        global.bar_bg_sprite.SetOpacity(0);
+        global.bar_fg_sprite.SetOpacity(0);
+        global.subtitle_sprite.SetOpacity(0);
+        global.msg_sprite.SetOpacity(0);
+        global.sysreset_title_sprite.SetOpacity(0);
+        global.reboot_sub_sprite.SetOpacity(0);
+        global.shutdown_sub_sprite.SetOpacity(0);
 
-    mode = new_mode;
+        global.mode = new_mode;
 
-    # Show the full logo immediately when switching to a non-boot mode
-    if (mode != "boot") {
-        # Hide fade-in layers, show final frame on hold sprite
-        for (i = 0; i < fade_frames; i++)
-            fade_sprite[i].SetOpacity(0);
-        hold_sprite.SetImage(frame_img[num_frames - 1]);
-        hold_sprite.SetOpacity(1);
-        current_hold_index = num_frames - 1;
+        # Show the full logo immediately when switching to a non-boot mode
+        if (global.mode != "boot") {
+            # Hide fade-in layers, show final frame on hold sprite
+            for (i = 0; i < global.fade_frames; i++)
+                global.fade_sprite[i].SetOpacity(0);
+            global.hold_sprite.SetImage(global.frame_img[global.num_frames - 1]);
+            global.hold_sprite.SetOpacity(1);
+            global.current_hold_index = global.num_frames - 1;
 
-        # Skip animation — ensure frame is past anim_total
-        if (frame <= anim_total)
-            frame = anim_total + 1;
-    }
+            # Skip animation — ensure frame is past anim_total
+            if (global.frame <= global.anim_total)
+                global.frame = global.anim_total + 1;
+        }
 
-    # Show mode-specific elements
-    if (mode == "updates") {
-        updating_sprite.SetOpacity(1);
-        bar_bg_sprite.SetOpacity(0.3);
-        bar_fg_sprite.SetOpacity(1);
-        subtitle_sprite.SetOpacity(1);
-    } else if (mode == "shutdown") {
-        rescue_mode_sprite.SetOpacity(1);
-        shutdown_sub_sprite.SetOpacity(1);
-    } else if (mode == "reboot") {
-        updating_sprite.SetOpacity(1);
-        reboot_sub_sprite.SetOpacity(1);
-    } else if (mode == "system-reset") {
-        sysreset_title_sprite.SetOpacity(1);
-        bar_bg_sprite.SetOpacity(0.3);
-        bar_fg_sprite.SetOpacity(1);
-        subtitle_sprite.SetOpacity(1);
+        # Show mode-specific elements
+        if (global.mode == "updates") {
+            global.updating_sprite.SetOpacity(1);
+            global.bar_bg_sprite.SetOpacity(0.3);
+            global.bar_fg_sprite.SetOpacity(1);
+            global.subtitle_sprite.SetOpacity(1);
+        } else if (global.mode == "shutdown") {
+            global.rescue_mode_sprite.SetOpacity(1);
+            global.shutdown_sub_sprite.SetOpacity(1);
+        } else if (global.mode == "reboot") {
+            global.updating_sprite.SetOpacity(1);
+            global.reboot_sub_sprite.SetOpacity(1);
+        } else if (global.mode == "system-reset") {
+            global.sysreset_title_sprite.SetOpacity(1);
+            global.bar_bg_sprite.SetOpacity(0.3);
+            global.bar_fg_sprite.SetOpacity(1);
+            global.subtitle_sprite.SetOpacity(1);
+        }
     }
 }
+
+# Seed `mode` now, so a system-update or message arriving before the first
+# refresh tick is not dropped by the mode guards in those callbacks.
+apply_mode_change();
 
 # ---------------------------------------------------------------------------
 # Refresh callback
 # ---------------------------------------------------------------------------
 fun refresh_callback() {
+    # Mode is now retargeted under a running script, so poll for it here.
+    apply_mode_change();
+
     global.frame++;
 
     # --------------------------------------------------------------

@@ -6,6 +6,13 @@ start)
         mount -o remount,rw /boot
         rm -f /boot/REG_RESCUE /tmp/REG_RESCUE
         /usr/bin/plymouth --wait quit
+        # Rebind the framebuffer console S002plymouth unbound, or the rescue shell below renders to nothing.
+        for vtcon in /sys/class/vtconsole/vtcon*; do
+            [ -r "$vtcon/name" ] || continue
+            case "$(cat "$vtcon/name")" in
+                *"frame buffer device"*) echo 1 > "$vtcon/bind" ;;
+            esac
+        done
     else
         shutdown -r now
     fi
