@@ -58,7 +58,7 @@ jobs:
           CCACHE_DISABLE=1 make -j$(nproc) BR2_EXTERNAL="${GITHUB_WORKSPACE}" -C "${GITHUB_WORKSPACE}/buildroot"
           
           mkdir -p ${GITHUB_WORKSPACE}/REG-rescue-COMPILED
-          find "${GITHUB_WORKSPACE}/buildroot/output/images/" -type f -name 'REG-linux-rescue*' -exec mv "{}" "${GITHUB_WORKSPACE}/REG-rescue-COMPILED/REG-linux-rescue-${{ matrix.platform }}-${rescueversion}-${sufixdate}" \; -exec echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT" \;
+          find "${GITHUB_WORKSPACE}/buildroot/output/images/" -type f -name 'REG-linux-rescue*' -exec mv "{}" "${GITHUB_WORKSPACE}/REG-rescue-COMPILED/REG-linux-rescue-${{ matrix.platform }}-${rescueversion}" \; -exec echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT" \;
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
         uses: actions/upload-artifact@v7
@@ -81,6 +81,8 @@ jobs:
         with:
           files: REG-rescue-COMPILED/REG-linux-rescue-*
           tag_name: ${{ needs.build.outputs.rescueversion }}
-          prerelease: true
+          prerelease: false
+          draft: false
+          make_latest: true
           generate_release_notes: true
           name: REG-linux Rescue ${{ needs.build.outputs.rescueversion }}
