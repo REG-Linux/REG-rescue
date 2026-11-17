@@ -1,0 +1,185 @@
+#!/bin/dash
+#
+# reg-rescue - REG-Linux rescue menu
+#
+# Runs on the rescue console (tty1, serial) instead of a bare shell, and from
+# a PC over USB:  adb shell reg-rescue
+# Plain text, numbers + Enter: works on any console and through adb, with
+# nothing beyond what the rescue image already ships.
+#
+# Every action asks first, and resets move files aside (*.old, *.bak)
+# instead of deleting them.
+
+LOGDIR=/boot/logs
+
+say() { printf '%s\n' "$*"; }
+pause() { printf '\nPress Enter to continue...'; read -r _; }
+confirm() { printf '%s [y/N] ' "$1"; read -r a; [ "$a" = y ] || [ "$a" = Y ]; }
+
+boot_rw() { mount -o remount,rw /boot; }
+boot_ro() { sync; mount -o remount,ro /boot 2>/dev/null; }
+
+share_part() { /usr/bin/system-part share_internal 2>/dev/null; }
+share_type() { blkid -o value -s TYPE "$1" 2>/dev/null; }
+# where the share partition is mounted now, if it is
+share_mount() { awk -v d="$1" '$1 == d { print $2; exit }' /proc/mounts; }
+
+# mount the share partition at $SHARE (on /tmp/userdata if not mounted yet)
+mount_share() {
+    SHARE=""
+    p=$(share_part) || { say "No SHARE partition found on the boot disk."; return 1; }
+    SHARE=$(share_mount "$p")
+    [ -n "$SHARE" ] && return 0
+    mkdir -p /tmp/userdata
+    /usr/bin/system-mount "$(share_type "$p")" 1 "$p" /tmp/userdata || {
+        say "Cannot mount $p (try 'Check and repair disks')."; return 1; }
+    SHARE=/tmp/userdata
+}
+
+umount_share() {
+    [ "$SHARE" = /tmp/userdata ] && umount /tmp/userdata 2>/dev/null
+    SHARE=""
+}
+
+info() {
+    say "REG-Linux rescue $(cut -d' ' -f1 /usr/share/reglinux/system.version)" \
+        "($(cat /usr/share/reglinux/system.arch))"
+    [ -r /boot/boot/system.board ] && say "Board:  $(cat /boot/boot/system.board)"
+    [ -r /boot/boot/system.version ] && say "System: $(cat /boot/boot/system.version)"
+    say "Kernel: $(uname -r) $(uname -m)"
+    say
+    lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINT
+    say
+    df -h /boot 2>/dev/null
+    [ -f /boot/rescue.log ] && say "" "Last update log: /boot/rescue.log (menu 6)"
+}
+
+repair() {
+    b=$(/usr/bin/system-part boot)
+    p=$(share_part)
+    say "Boot partition: $b"
+    say "Share partition: ${p:-not found}"
+    confirm "Check and repair them now?" || return
+    # the boot partition stays mounted (rescue runs from it): check it read-only
+    say "== $b (read-only check)"
+    fsck.fat -n "$b"
+    [ -n "$p" ] || return
+    m=$(share_mount "$p")
+    if [ -n "$m" ]; then
+        umount "$m" || { say "$p is busy ($m), cannot repair it."; return; }
+    fi
+    t=$(share_type "$p")
+    say "== $p ($t)"
+    case "$t" in
+        ext4|ext3|ext2) e2fsck -fy "$p" ;;
+        btrfs) btrfs check --readonly "$p" || say "btrfs errors: back up your data first, then run 'btrfs check --repair $p' from the shell." ;;
+        exfat) fsck.exfat -y "$p" ;;
+        vfat)  fsck.fat -a "$p" ;;
+        ntfs)  ntfsfix "$p" ;;
+        *)     say "Unknown filesystem '$t', not touched." ;;
+    esac
+}
+
+reset_overlay() {
+    if [ ! -f /boot/boot/overlay ]; then
+        say "No persistent overlay: nothing to reset."; return
+    fi
+    say "The overlay keeps changes made to the system itself (installed"
+    say "packages, edited system files). Your games and settings are not in it."
+    confirm "Set it aside (kept as /boot/boot/overlay.old)?" || return
+    boot_rw && mv -f /boot/boot/overlay /boot/boot/overlay.old && say "Done."
+    boot_ro
+}
+
+reset_config() {
+    mount_share || return
+    c="$SHARE/system/system.conf"
+    if [ ! -f "$c" ]; then say "No $c: nothing to reset."; umount_share; return; fi
+    say "Resets REG settings to defaults on the next boot."
+    say "Games, saves and BIOS files are kept."
+    if confirm "Move system.conf aside (kept as system.conf.bak)?"; then
+        mv -f "$c" "$c.bak" && say "Done."
+    fi
+    umount_share
+}
+
+save_logs() {
+    boot_rw || return
+    mkdir -p "$LOGDIR"
+    f="$LOGDIR/rescue-$(date +%Y%m%d-%H%M%S).txt"
+    {
+        info
+        say "" "== /proc/cmdline"; cat /proc/cmdline
+        say "" "== dmesg"; dmesg
+        say "" "== rescue.log"; cat /boot/rescue.log 2>/dev/null
+    } > "$f" 2>&1
+    boot_ro
+    say "Saved to $f"
+    say "Read it on a PC from the card's REGLINUX partition, or: adb pull $f"
+}
+
+update_log() {
+    if [ -f /boot/rescue.log ]; then less /boot/rescue.log; else say "No update log."; pause; fi
+}
+
+retry_update() {
+    # an interrupted upgrade leaves its file list on /boot; the archive stays
+    # in /userdata/system/upgrade
+    if [ ! -f /boot/upgrade.list ]; then
+        say "No interrupted upgrade on /boot (no upgrade.list)."
+        say "Run the upgrade again from REG once it boots."
+        return
+    fi
+    say "Interrupted upgrade, files:"; sed 's/^/  /' /boot/upgrade.list
+    confirm "Reboot and try it again?" || return
+    boot_rw && touch /boot/REG_UPDATE && boot_ro && reboot
+}
+
+usb_mode() {
+    say "USB connection to a PC:"
+    say "  1) ADB   - 'adb shell reg-rescue' for this menu, adb push/pull files"
+    say "  2) MTP   - browse files"
+    say "  3) Off"
+    printf 'Choice: '; read -r u
+    case "$u" in
+        1) /usr/bin/usbgadget adb ;;
+        2) /usr/bin/usbgadget mtp ;;
+        3) /usr/bin/usbgadget stop ;;
+    esac
+}
+
+menu() {
+    say
+    say "=========== REG-Linux rescue ==========="
+    say "  1) System and disk information"
+    say "  2) Check and repair disks"
+    say "  3) Reset the system overlay"
+    say "  4) Reset REG settings"
+    say "  5) Save logs to /boot/logs"
+    say "  6) Read the last update log"
+    say "  7) Retry an interrupted upgrade"
+    say "  8) USB connection (ADB / MTP)"
+    say "  9) Shell"
+    say "  r) Reboot   p) Power off   q) Quit menu"
+    printf 'Choice: '
+}
+
+while :; do
+    menu
+    read -r c || exit 0
+    say
+    case "$c" in
+        1) info; pause ;;
+        2) repair; pause ;;
+        3) reset_overlay; pause ;;
+        4) reset_config; pause ;;
+        5) save_logs; pause ;;
+        6) update_log ;;
+        7) retry_update; pause ;;
+        8) usb_mode; pause ;;
+        9) say "Type 'exit' to come back to the menu."; /bin/bash -l ;;
+        r|R) confirm "Reboot?" && { sync; reboot; } ;;
+        p|P) confirm "Power off?" && { sync; poweroff; } ;;
+        q|Q) exit 0 ;;
+    esac
+done

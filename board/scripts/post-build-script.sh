@@ -61,6 +61,14 @@ if [[ -n "${SYSTEM_GETTY_PORT}" ]]; then
         ${TARGET_DIR}/etc/inittab
 fi
 
+# slim: tools and data a rescue system never uses
+# - btrfs-progs extras (~3.5 MB): keep btrfs, mkfs.btrfs, fsck.btrfs/btrfsck
+rm -f "${TARGET_DIR}/usr/bin/"btrfs-{convert,image,map-logical,find-root,select-super} \
+      "${TARGET_DIR}/usr/bin/btrfstune"
+# - xkeyboard-config layout catalogues (only for layout pickers; libxkbcommon
+#   compiles keymaps from rules/evdev, keycodes and symbols)
+rm -f "${TARGET_DIR}/usr/share/X11/xkb/rules/"*.xml "${TARGET_DIR}/usr/share/X11/xkb/rules/"*.lst
+
 # aarch64: one image for 4K, 16K and 64K-page kernels (BR2_ARM64_PAGE_SIZE_64K)
 # -- refuse to produce one that a larger-page kernel cannot load
 if grep -q "^BR2_ARM64_PAGE_SIZE_64K=y$" "${BR2_CONFIG}"; then

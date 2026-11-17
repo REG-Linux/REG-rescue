@@ -13,6 +13,15 @@ start)
                 *"frame buffer device"*) echo 1 > "$vtcon/bind" ;;
             esac
         done
+        # Rescue is often needed on handhelds with no keyboard: offer the
+        # rescue menu over USB (adb shell reg-rescue) unless gadgets are off
+        # or ADB is explicitly disabled (system.usb.gadget.adb=0 keeps MTP).
+        get_key() {
+            awk -F= -v k="$1" '$0 !~ /^[[:space:]]*#/ && $1 == k {print $2; exit}' /boot/system-boot.conf 2>/dev/null
+        }
+        if [ "$(get_key system.usb.gadget)" != "0" ] && [ "$(get_key system.usb.gadget.adb)" != "0" ]; then
+            /usr/bin/usbgadget adb >/dev/null 2>&1 &
+        fi
     else
         shutdown -r now
     fi
