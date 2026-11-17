@@ -67,7 +67,7 @@ BR2_TARGET_ROOTFS_SQUASHFS=y
 BR2_PACKAGE_SQUASHFS=y
 BR2_PACKAGE_SQUASHFS_XZ=y
 
-# REGlinux splash screen (one font: DejaVuSans, installed as Plymouth.ttf)
+# REGlinux splash screen (pango; the theme only uses DejaVu Sans and Sans Bold)
 BR2_PACKAGE_PLYMOUTH=y
 BR2_PACKAGE_DEJAVU_MONO=n
 BR2_PACKAGE_DEJAVU_SERIF=n
