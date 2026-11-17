@@ -32,12 +32,15 @@ BR2_PACKAGE_UTIL_LINUX_EJECT=y
 BR2_PACKAGE_UTIL_LINUX_HWCLOCK=y
 BR2_PACKAGE_UTIL_LINUX_KILL=y
 BR2_PACKAGE_UTIL_LINUX_LOGGER=y
-BR2_PACKAGE_UTIL_LINUX_LOGIN=y
 BR2_PACKAGE_UTIL_LINUX_MORE=y
 BR2_PACKAGE_UTIL_LINUX_MOUNT=y
-BR2_PACKAGE_UTIL_LINUX_SU=y
+# no login/su: consoles autologin as root and adbd runs as root, so they would
+# only pull in linux-pam
 BR2_PACKAGE_UTIL_LINUX_FALLOCATE=y
 BR2_PACKAGE_EUDEV_RULES_GEN=y
+# no 9.5 MB hwdb.bin: rescue needs block, input and USB gadget devices, which
+# udev classifies without it (input_id, blkid builtins)
+BR2_PACKAGE_EUDEV_ENABLE_HWDB=n
 
 # system
 BR2_TARGET_GENERIC_HOSTNAME="REGLINUX"
@@ -64,8 +67,12 @@ BR2_TARGET_ROOTFS_SQUASHFS=y
 BR2_PACKAGE_SQUASHFS=y
 BR2_PACKAGE_SQUASHFS_XZ=y
 
-# REGlinux splash screen
+# REGlinux splash screen (pango; the theme only uses DejaVu Sans and Sans Bold)
 BR2_PACKAGE_PLYMOUTH=y
+BR2_PACKAGE_DEJAVU_MONO=n
+BR2_PACKAGE_DEJAVU_SERIF=n
+BR2_PACKAGE_DEJAVU_SANS_CONDENSED=n
+BR2_PACKAGE_DEJAVU_SERIF_CONDENSED=n
 
 # USB gadget (adb/mtp), driven by system.usb.gadget* keys in /boot/system-boot.conf
 BR2_PACKAGE_UMTP_RESPONDER=y

@@ -19,8 +19,6 @@ config BR2_PACKAGE_RESCUE_SYSTEM
 	select BR2_RISCV_ISA_RVC			if BR2_PACKAGE_RESCUE_TARGET_RISCV64
 
 	# Minimal system required packages
-	select BR2_PACKAGE_RNG_TOOLS			# system entropy. Currently disabled for RK3128 due to high CPU impact
-	select BR2_PACKAGE_IRQBALANCE			# irq balancing
 	select BR2_PACKAGE_HOST_GENEXT2FS		# tools to generate rescue image
 	select BR2_PACKAGE_DOSFSTOOLS			# fat
 	select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT		# fat

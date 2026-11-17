@@ -8,3 +8,5 @@ echo '
            Retro Emulation Gaming Linux
 '
 echo
+echo 'Rescue menu: reg-rescue    (from a PC over USB: adb shell reg-rescue)'
+echo

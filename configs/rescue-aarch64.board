@@ -1,4 +1,4 @@
-include bootlin-aarch64.common
+include toolchain-aarch64-glibc.common
 include rescue-board.common
 
 # Target definition
@@ -13,9 +13,15 @@ BR2_GLOBAL_PATCH_DIR="$(BR2_EXTERNAL_RESCUE_PATH)/board/patches $(BR2_EXTERNAL_R
 BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_RESCUE_PATH)/board/fsoverlay $(BR2_EXTERNAL_RESCUE_PATH)/board/aarch64/fsoverlay"
 BR2_TARGET_ROOTFS_SQUASHFS4_XZ=y
 
-# Linux headers
+# Linux headers: 4.19, set in toolchain-aarch64-glibc.common (glibc's
+# minimum kernel follows them)
 BR2_KERNEL=n
-BR2_KERNEL_HEADERS_6_6=y
+
+# One image for every aarch64 REG board, whatever the kernel page size: link
+# with 64 KiB alignment (Buildroot passes -z max-page-size from this), which
+# loads on 4K, 16K (Apple Silicon) and 64K kernels. Only the ELF layout
+# changes; the page size is still read from the kernel at run time.
+BR2_ARM64_PAGE_SIZE_64K=y
 
 # Filesystem
 BR2_PACKAGE_HOST_DOSFSTOOLS=y

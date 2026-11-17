@@ -5,7 +5,8 @@
 ################################################################################
 UMTP_RESPONDER_VERSION = umtprd-1.8.1
 UMTP_RESPONDER_SITE = $(call github,viveris,uMTP-Responder,$(UMTP_RESPONDER_VERSION))
-UMTP_RESPONDER_DEPENDENCIES = libusb libglib2 inih
+# umtprd links only libc (no glib, libusb or inih)
+UMTP_RESPONDER_DEPENDENCIES =
 
 define UMTP_RESPONDER_BUILD_CMDS
 	cd $(@D) && make -f Makefile CC=$(TARGET_CC)

@@ -1,2 +1,4 @@
 #!/bin/sh
+# Rescue console (tty1, serial): the rescue menu; quitting it gives a shell.
+[ -x /usr/bin/reg-rescue ] && /usr/bin/reg-rescue
 exec /bin/bash -l

@@ -1,0 +1,23 @@
+#
+# Toolchain built by Buildroot for aarch64, instead of Bootlin's prebuilt one.
+#
+# Bootlin's prebuilt glibc (libc.so, ld-linux) is linked for 4 KiB pages
+# (p_align 0x1000), so a 16 KiB-page kernel such as Apple Silicon's (REG
+# asahi) cannot load it: the rescue image could not even start /sbin/init.
+# Built here, glibc is linked like everything else with the page size of
+# BR2_ARM64_PAGE_SIZE (see rescue-aarch64.board), which Buildroot's toolchain
+# wrapper turns into -z max-page-size.
+#
+BR2_TOOLCHAIN_BUILDROOT=y
+BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
+BR2_TOOLCHAIN_BUILDROOT_CXX=y
+BR2_ENABLE_LOCALE=y
+BR2_USE_WCHAR=y
+
+# glibc refuses to run on kernels older than its headers
+# (--enable-kernel=<headers>). Keep 4.19, exactly as Bootlin's toolchain had,
+# so the image runs on the same kernels as before (REG aarch64 vendor kernels
+# go down to 5.15).
+BR2_KERNEL_HEADERS_VERSION=y
+BR2_DEFAULT_KERNEL_VERSION="4.19.325"
+BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_19=y

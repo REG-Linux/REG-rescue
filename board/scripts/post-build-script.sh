@@ -60,3 +60,33 @@ if [[ -n "${SYSTEM_GETTY_PORT}" ]]; then
     sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -n -L -l /usr/bin/system-autologin '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
         ${TARGET_DIR}/etc/inittab
 fi
+
+# slim: tools and data a rescue system never uses
+# - btrfs-progs extras (~3.5 MB): keep btrfs, mkfs.btrfs, fsck.btrfs/btrfsck
+rm -f "${TARGET_DIR}/usr/bin/"btrfs-{convert,image,map-logical,find-root,select-super} \
+      "${TARGET_DIR}/usr/bin/btrfstune"
+# - command-line tools of the splash screen's libraries (pango, harfbuzz,
+#   glib/gio, fontconfig, fribidi, pcre2, libevdev); the libraries stay
+rm -f "${TARGET_DIR}/usr/bin/"{hb-info,hb-ot-shape-closure,hb-shape,hb-subset,hb-view} \
+      "${TARGET_DIR}/usr/bin/"{pango-list,pango-segmentation,pango-view,fribidi} \
+      "${TARGET_DIR}/usr/bin/"{gapplication,gdbus,gio,gio-querymodules,gresource,gsettings} \
+      "${TARGET_DIR}/usr/bin/"{gi-compile-repository,gi-decompile-typelib,gi-inspect-typelib} \
+      "${TARGET_DIR}/usr/bin/"{pcre2grep,pcre2test,mouse-dpi-tool,touchpad-edge-detector,libevdev-tweak-device} \
+      "${TARGET_DIR}/usr/bin/"fc-*
+# - libraries only those tools used
+rm -f "${TARGET_DIR}/usr/lib/"lib{harfbuzz-subset,harfbuzz-cairo,girepository-2.0,cairo-gobject,gthread-2.0,pcre2-posix}.so*
+# - Plymouth: keep the script plugin (our theme), text/details (no-graphics
+#   fallback) and label-pango; drop the other splash plugins
+rm -f "${TARGET_DIR}/usr/lib/plymouth/"{fade-throbber,space-flares,tribar,two-step,label-freetype}.so
+# - fonts the theme does not use (it uses Sans and Sans Bold only)
+rm -f "${TARGET_DIR}/usr/share/fonts/dejavu/"DejaVuSans-{Oblique,BoldOblique,ExtraLight}.ttf
+# - xkeyboard-config layout catalogues (only for layout pickers; libxkbcommon
+#   compiles keymaps from rules/evdev, keycodes and symbols)
+rm -f "${TARGET_DIR}/usr/share/X11/xkb/rules/"*.xml "${TARGET_DIR}/usr/share/X11/xkb/rules/"*.lst
+
+# aarch64: one image for 4K, 16K and 64K-page kernels (BR2_ARM64_PAGE_SIZE_64K)
+# -- refuse to produce one that a larger-page kernel cannot load
+if grep -q "^BR2_ARM64_PAGE_SIZE_64K=y$" "${BR2_CONFIG}"; then
+    READELF=$(ls "${HOST_DIR}"/bin/*-readelf 2>/dev/null | head -n1)
+    "${BR2_EXTERNAL_RESCUE_PATH}/board/scripts/check-elf-alignment.sh" "${READELF:-readelf}" "${TARGET_DIR}" 0x10000 || exit 1
+fi

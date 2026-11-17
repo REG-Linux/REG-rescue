@@ -23,13 +23,16 @@ determine_default_share_part_num() {
   BOOTPART=$(determine_X_part "/boot")
   BOOTDISKPREFIX=$(determine_part_prefix "$BOOTPART")
   SHAREPART=$(blkid -o device -t LABEL=SHARE "$BOOTDISKPREFIX"*)
-  [ -n "${SHAREPART#"${SHAREPART%[0-9]}"}" ] && echo "${SHAREPART#"${SHAREPART%[0-9]}"}" || exit 1
+  # all trailing digits: partition 12 is "12", not "2" (Apple internal disks
+  # routinely have more than 9 partitions)
+  [ -n "${SHAREPART#"${SHAREPART%[0-9]}"}" ] && echo "$SHAREPART" | sed -E 's/^.*[^0-9]([0-9]+)$/\1/' || exit 1
 }
 
 determine_part_prefix() {
   # /dev/mmcblk0p3 => /dev/mmcblk0
   # /dev/sda1      => /dev/sda
-  [ -n "${1#"${1%p[0-9]}"}" ] && echo "${1%p[0-9]}" || echo "${1%[0-9]}"
+  # any partition number: /dev/nvme0n1p12 => /dev/nvme0n1, /dev/sda10 => /dev/sda
+  echo "$1" | sed -E 's/([0-9])p[0-9]+$/\1/; t; s/[0-9]+$//'
 }
 
 PARTNAME=$1
