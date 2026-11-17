@@ -60,3 +60,10 @@ if [[ -n "${SYSTEM_GETTY_PORT}" ]]; then
     sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -n -L -l /usr/bin/system-autologin '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
         ${TARGET_DIR}/etc/inittab
 fi
+
+# aarch64: one image for 4K, 16K and 64K-page kernels (BR2_ARM64_PAGE_SIZE_64K)
+# -- refuse to produce one that a larger-page kernel cannot load
+if grep -q "^BR2_ARM64_PAGE_SIZE_64K=y$" "${BR2_CONFIG}"; then
+    READELF=$(ls "${HOST_DIR}"/bin/*-readelf 2>/dev/null | head -n1)
+    "${BR2_EXTERNAL_RESCUE_PATH}/board/scripts/check-elf-alignment.sh" "${READELF:-readelf}" "${TARGET_DIR}" 0x10000 || exit 1
+fi
