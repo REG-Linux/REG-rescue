@@ -6,6 +6,17 @@ BOOTPART=$(grep -m 1 /boot /proc/mounts | sed 's| /boot .*||')
 BOOTDISK="${BOOTPART%p[0-9]*}"
 EMMCDISK=""
 TMP=/tmp/mnt
+MOUNTED=0
+
+fail() {
+    echo ""
+    echo "Error: $*"
+    [ "${MOUNTED}" = "1" ] && umount "${TMP}" > /dev/null 2>&1
+    echo "Installation failed, the eMMC is not bootable."
+    exit 1
+}
+
+[ -b "${BOOTPART}" ] || fail "can't find the boot partition."
 
 for TYPE in /sys/class/block/mmcblk*/device/type; do
     if grep -q "MMC" "${TYPE}"; then
@@ -37,8 +48,8 @@ echo "==============================="
 echo ""
 echo "eMMC found at ${EMMCDISK}"
 echo ""
-echo -n "WARNING: ALL DATA ON eMMC WILL BE ERASED! Continue (y/N)?  "
-read -rn 1 ANSWER
+echo -n "WARNING: ALL DATA ON eMMC WILL BE ERASED! Continue (y/N)? "
+read -r ANSWER
 
 if [ ! "${ANSWER}" = "y" ]; then
     echo ""
@@ -52,62 +63,76 @@ umount "${EMMCDISK}"* > /dev/null 2>&1
 # Detect the start sector of the boot partition on the source disk (512-byte sectors).
 # This preserves the same bootloader gap on eMMC regardless of board (e.g. 1 MiB for
 # most boards, 16 MiB for OdroidC5 whose signed FIP is several MiB).
-PART1_START_SECTOR=$(cat /sys/class/block/$(basename "${BOOTPART}")/start)
+PART1_START_SECTOR=$(cat "/sys/class/block/$(basename "${BOOTPART}")/start" 2>/dev/null)
+[ -n "${PART1_START_SECTOR}" ] && [ "${PART1_START_SECTOR}" -gt 1 ] || fail "can't read the boot partition start sector."
 PART1_START_MIB=$(( PART1_START_SECTOR / 2048 ))
 
 echo "Erasing eMMC ..."
-dd if=/dev/zero of="${EMMCDISK}" bs=1M count="${PART1_START_MIB}" conv=fsync > /dev/null 2>&1
+dd if=/dev/zero of="${EMMCDISK}" bs=1M count="${PART1_START_MIB}" conv=fsync > /dev/null 2>&1 || fail "can't erase ${EMMCDISK}."
 
 echo "Creating partitions"
-SYSTEM_SIZE=$(blockdev --getsize64 "${BOOTPART}")
+SYSTEM_SIZE=$(blockdev --getsize64 "${BOOTPART}") || fail "can't read the boot partition size."
 # Round up to MiB boundary, add the same gap as the source disk
 SYSTEM_MIB=$(( (SYSTEM_SIZE + 1048575) / 1048576 + PART1_START_MIB ))
-parted -s "${EMMCDISK}" mklabel msdos
-parted -s "${EMMCDISK}" -a optimal mkpart primary fat32 "${PART1_START_MIB}MiB" "${SYSTEM_MIB}MiB"
-parted -s "${EMMCDISK}" set 1 boot on
-parted -s "${EMMCDISK}" -a optimal mkpart primary ext4 "${SYSTEM_MIB}MiB" 100%
+parted -s "${EMMCDISK}" mklabel msdos || fail "can't create the partition table."
+parted -s "${EMMCDISK}" -a optimal mkpart primary fat32 "${PART1_START_MIB}MiB" "${SYSTEM_MIB}MiB" || fail "can't create the boot partition."
+parted -s "${EMMCDISK}" set 1 boot on || fail "can't set the boot flag."
+parted -s "${EMMCDISK}" -a optimal mkpart primary ext4 "${SYSTEM_MIB}MiB" 100% || fail "can't create the SHARE partition."
 sync
 partprobe "${EMMCDISK}"
 
+# wait for the partition nodes
+N=0
+while { [ ! -b "${EMMCDISK}p1" ] || [ ! -b "${EMMCDISK}p2" ]; } && [ "${N}" -lt 10 ]; do
+    N=$((N + 1))
+    sleep 1
+done
+[ -b "${EMMCDISK}p1" ] && [ -b "${EMMCDISK}p2" ] || fail "the new partitions did not show up."
+
 echo "Creating filesystems"
-dd if=/dev/zero of="${EMMCDISK}p1" bs=1M count=1 conv=fsync > /dev/null 2>&1
-mkfs.vfat -n REGLINUX "${EMMCDISK}p1" > /dev/null 2>&1
-dd if=/dev/zero of="${EMMCDISK}p2" bs=1M count=1 conv=fsync > /dev/null 2>&1
-mkfs.ext4 -L SHARE "${EMMCDISK}p2" > /dev/null 2>&1
+dd if=/dev/zero of="${EMMCDISK}p1" bs=1M count=1 conv=fsync > /dev/null 2>&1 || fail "can't wipe ${EMMCDISK}p1."
+mkfs.vfat -n REGLINUX "${EMMCDISK}p1" > /dev/null || fail "can't format the boot partition."
+dd if=/dev/zero of="${EMMCDISK}p2" bs=1M count=1 conv=fsync > /dev/null 2>&1 || fail "can't wipe ${EMMCDISK}p2."
+mkfs.ext4 -F -L SHARE "${EMMCDISK}p2" > /dev/null || fail "can't format the SHARE partition."
 sync
 
 echo "Installing bootloader"
 # Copy sector 1 through (PART1_START_SECTOR-1): the full bootloader area, skipping
 # only sector 0 (MBR/partition table) which was just written by parted.
-dd if="${BOOTDISK}" skip=1 of="${EMMCDISK}" bs=512 seek=1 count=$(( PART1_START_SECTOR - 1 )) conv=fsync > /dev/null 2>&1
+dd if="${BOOTDISK}" skip=1 of="${EMMCDISK}" bs=512 seek=1 count=$(( PART1_START_SECTOR - 1 )) conv=fsync > /dev/null 2>&1 || fail "can't copy the bootloader."
 
 echo "Copying system files"
-mkdir -p ${TMP}
-mount -t vfat "${EMMCDISK}p1" ${TMP} || { echo "Failed to mount eMMC boot partition!"; exit 1; }
-cp -vR /boot/* ${TMP}/
+mkdir -p "${TMP}" || fail "can't create ${TMP}."
+mount -t vfat "${EMMCDISK}p1" "${TMP}" || fail "can't mount the eMMC boot partition."
+MOUNTED=1
+cp -vR /boot/* "${TMP}/" || fail "can't copy the system files (is the eMMC too small?)."
 sync
 
 echo "Adjusting partition UUIDs"
 NEWUUID=$(blkid -c /dev/null -o value -s UUID "${EMMCDISK}p1")
-if [ -n "$NEWUUID" ]; then
-    if [ -f /boot/boot.scr ]; then
-        dumpimage -T script -p 0 -o /tmp/boot.cmd.tmp /boot/boot.scr
-        OFFSET=$(grep -abo -m1 '^#' /tmp/boot.cmd.tmp | cut -d: -f1)
-        if [ -n "$OFFSET" ]; then
-            dd if="/tmp/boot.cmd.tmp" of="/tmp/boot.cmd" bs=1 skip="$OFFSET" 2>/dev/null
-        else
-            echo "Error extracting boot.cmd from boot.scr"
-            display_error
-        fi
-        sed -i "s/label=REGLINUX/root=UUID=${NEWUUID}/g;s/root=UUID=[a-fA-F0-9-]*/root=UUID=${NEWUUID}/g" /tmp/boot.cmd
-        mkimage -C none -A arm64 -T script -d /tmp/boot.cmd ${TMP}/boot.scr
-    fi
-    find "${TMP}/" -type f \( -iname "LinuxLoader.cfg" -o -iname "extlinux.conf" -o -iname "cmdline.txt" -o -iname "boot.cmd" -o -iname "boot.ini" -o -iname "uEnv.txt" -o -iname "syslinux.cfg" -o -iname "grub.cfg" \) -exec sed -i "s/label=REGLINUX/root=UUID=${NEWUUID}/g;s/root=UUID=[a-fA-F0-9-]*/root=UUID=${NEWUUID}/g" {} \+
-    echo "Updated UUID to ${NEWUUID}"
-else
-    echo "Error getting UUID of eMMC boot partition"
-    display_error
+[ -n "${NEWUUID}" ] || fail "can't get the UUID of the eMMC boot partition."
+if [ -f /boot/boot.scr ]; then
+    dumpimage -T script -p 0 -o /tmp/boot.cmd.tmp /boot/boot.scr > /dev/null || fail "can't extract boot.cmd from boot.scr."
+    OFFSET=$(grep -abo -m1 '^#' /tmp/boot.cmd.tmp | cut -d: -f1)
+    [ -n "${OFFSET}" ] || fail "can't find the script in boot.scr."
+    dd if="/tmp/boot.cmd.tmp" of="/tmp/boot.cmd" bs=1 skip="${OFFSET}" 2>/dev/null || fail "can't extract boot.cmd from boot.scr."
+    sed -i "s/label=REGLINUX/root=UUID=${NEWUUID}/g;s/root=UUID=[a-fA-F0-9-]*/root=UUID=${NEWUUID}/g" /tmp/boot.cmd || fail "can't update boot.cmd."
+    mkimage -C none -A arm64 -T script -d /tmp/boot.cmd "${TMP}/boot.scr" > /dev/null || fail "can't build boot.scr."
 fi
+find "${TMP}/" -type f \( -iname "LinuxLoader.cfg" -o -iname "extlinux.conf" -o -iname "cmdline.txt" -o -iname "boot.cmd" -o -iname "boot.ini" -o -iname "uEnv.txt" -o -iname "syslinux.cfg" -o -iname "grub.cfg" \) -exec sed -i "s/label=REGLINUX/root=UUID=${NEWUUID}/g;s/root=UUID=[a-fA-F0-9-]*/root=UUID=${NEWUUID}/g" {} \+ || fail "can't update the boot files."
+echo "Updated UUID to ${NEWUUID}"
 
-umount ${TMP}
+# userdata goes to the new eMMC SHARE partition, whatever the SD card used
+CONF="${TMP}/system-boot.conf"
+if [ -f "${CONF}" ]; then
+    if grep -q '^sharedevice=' "${CONF}"; then
+        sed -i 's/^sharedevice=.*/sharedevice=INTERNAL/' "${CONF}" || fail "can't update system-boot.conf."
+    else
+        echo "sharedevice=INTERNAL" >> "${CONF}" || fail "can't update system-boot.conf."
+    fi
+fi
+sync
+
+umount "${TMP}" || fail "can't unmount the eMMC boot partition."
+MOUNTED=0
 echo "Done. Power off the device, remove the SD card and boot from eMMC."
